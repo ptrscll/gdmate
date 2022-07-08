@@ -9,7 +9,6 @@ build:
   script: "{{ PYTHON }} -m pip install . -vv"
 
 requirements:
-
   host:
     - python
     - setuptools
@@ -22,8 +21,12 @@ requirements:
     - matplotlib
 
 test:
-  imports:
-    - gdmate
+  source_files:
+    - tests
+  requires:
+    - pytest
+  commands:
+    - pytest tests
 
 about:
   home: "https://github.com/gdmate/gdmate"
