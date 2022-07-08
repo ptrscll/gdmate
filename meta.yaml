@@ -1,0 +1,29 @@
+package:
+  name: gdmate
+  version: 0.1.0
+
+source:
+  path: .
+
+build:
+  script: "{{ PYTHON }} -m pip install . -vv"
+
+requirements:
+
+  host:
+    - python
+    - setuptools
+    - pip
+  
+  run:
+    - python
+    - numpy
+    - scipy
+    - matplotlib
+
+test:
+  imports:
+    - gdmate
+
+about:
+  home: "https://github.com/gdmate/gdmate"
