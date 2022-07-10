@@ -2,3 +2,4 @@
 .tox
 build
 *.egg-info
+docs/_build

@@ -10,6 +10,8 @@ Welcome to gdmate's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   notebooks/helloworld
+
 
 
 Indices and tables
