@@ -10,6 +10,7 @@ Welcome to gdmate's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   api
    notebooks/helloworld
 
 
