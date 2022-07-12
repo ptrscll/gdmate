@@ -28,7 +28,7 @@ author = 'Dylan Vasey, John Naliboff'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "nbsphinx",
+    "nbsphinx", "sphinx.ext.autodoc",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
