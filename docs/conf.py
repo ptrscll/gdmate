@@ -4,6 +4,17 @@
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+# Copy GDMATE notebooks into the docs directory
+import shutil
+nbdir = '../notebooks'
+docdir = './notebooks'
+
+try:
+    shutil.copytree(nbdir,docdir)
+except FileExistsError:
+    shutil.rmtree(docdir)
+    shutil.copytree(nbdir,docdir)
+
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -13,7 +24,6 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
-
 
 # -- Project information -----------------------------------------------------
 
