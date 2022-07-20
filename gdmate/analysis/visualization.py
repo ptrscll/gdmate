@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pyvista as pv
 
-def plot2D(mesh,field,bounds=None,ax=None,colorbar=False,**kwargs):
+def plot_pyvista_2d(mesh,field,bounds=None,ax=None,colorbar=False,**kwargs):
     """
     Plot 2D mesh using Pyvista on a Matplotlib axes.
 
@@ -21,7 +21,9 @@ def plot2D(mesh,field,bounds=None,ax=None,colorbar=False,**kwargs):
     """
     
     if bounds is not None:
+        # Add placeholder Z values to bounds
         bounds_3D = bounds + [0,0] # Add placeholder Z values to bounds
+        # Clip mesh by bounds
         mesh = mesh.clip_box(bounds=bounds_3D,invert=False)
     
     # Set up Pyvista plotter offscreen
@@ -34,6 +36,7 @@ def plot2D(mesh,field,bounds=None,ax=None,colorbar=False,**kwargs):
     # Set plotter to XY view
     plotter.view_xy()
     
+    # Remove default colorbar if not enabled
     if colorbar==False:
         plotter.remove_scalar_bar()
 
@@ -46,27 +49,31 @@ def plot2D(mesh,field,bounds=None,ax=None,colorbar=False,**kwargs):
     # Set a standard plotter window size
     plotter.window_size = (1024,int(1024*aspect_ratio))
     
-    xmid = xmag/2 + bounds_array[0] # X midpoint
-    ymid = ymag/2 + bounds_array[2] # Y midpoint
-    zoom = xmag*aspect_ratio*1.875 # Zoom level - not sure why 1.875 works
+    # Define the X/Y midpoints, and zoom level. The ideal zoom factor of 1.875 
+    # was determined by trial and error
+    xmid = xmag/2 + bounds_array[0]
+    ymid = ymag/2 + bounds_array[2]
+    zoom = xmag*aspect_ratio*1.875
     
-    # Set camera for plotter window
+    # Set camera settings for plotter window
     position = (xmid,ymid,zoom)
     focal_point = (xmid,ymid,0)
     viewup = (0,1,0)
     
+    # Package camera settings as a list
     camera = [position,focal_point,viewup]
     
+    # Assign the camera to the settings
     plotter.camera_position = camera
-    plotter.camera_set = True
     
     # Create image
     img = plotter.screenshot(transparent_background=True)
     
-    # Plot using imshow
+    # Get current axes if none defined
     if ax is None:
         ax = plt.gca()
     
+    # Plot using imshow
     ax.imshow(img,aspect='equal',extent=bounds)
     
     # Clear plot from memory
