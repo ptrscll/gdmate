@@ -5,4 +5,4 @@ API
     :toctree: generated
 
     gdmate.helloworld
-    gdmate.visualization
+    gdmate.pyvista_vis

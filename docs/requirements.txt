@@ -1,6 +1,9 @@
 sphinx>=1.4
+docutils
 ipykernel
 nbsphinx
+myst-parser
+sphinx_rtd_theme
 numpy
 matplotlib
 scipy
