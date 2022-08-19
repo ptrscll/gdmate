@@ -15,17 +15,16 @@ def pv_plot_2d(mesh,field,bounds=None,ax=None,colorbar=False,**kwargs):
             of surface or volume data. The mesh may also have attributes,
             such as data values assigned to points, cells, or fields assigning
             various information to the mesh.
-        field : float
+        field : str
             The name of the field contained within the Pyvista mesh object
             to plot. 
         bounds : list of floats or integers
             A list of four values that define the bounds by which to clip the 
             plot. Successively, the list of values define the minimum x,
             maximum x, minimum y, and maximum y bounds. (default: None)
-            List of bounds (km) by which to clip the plot (default: None)
         ax : Matplotlib axes object 
             Matplotlib axis on which to plot the mesh (default: None)
-        colorbar : Boolean 
+        colorbar : bool
             Boolean (True or False) for whether to include colorbar (default: False)
 
     Returns:
