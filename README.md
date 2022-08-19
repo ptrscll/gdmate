@@ -51,3 +51,6 @@ here are some specific features and pitfalls of the language:
 * Indices should be given inside square brackets and function or method call arguments inside parentheses (different from Matlab).
 * The first index of an array or list is 0 (e.g. x[0]), not 1.
 * Put dots after numbers to make them floats instead of integers.
+
+## Contributing to GDMATE
+GDMATE is a community-driven, open-source Python package by and for the geodynamics community. If you have code you would like to contribute, please review our [contribution guidelines](https://github.com/gdmate/gdmate/docs/CONTRIBUTING.md) and open a [pull request](https://docs.github.com/en/pull-requests). 
