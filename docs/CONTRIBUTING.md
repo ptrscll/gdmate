@@ -1,5 +1,5 @@
 # Contributing Code to GDMATE #
-The underlying goal of GDMATE is to enable highly transparent, community-drive code development within as structure that keeps the code organized, accessible, and useable. With that in mind, we welcome all contributions and ask that code abide by the following guidelines. Please contact one of the maintainers if you have questions about how to organize, document, and test your code for inclusion in the package. These guidelines will be used in assessing all pull requests for new code.
+The underlying goal of GDMATE is to enable highly transparent, community-drive code development within a structure that keeps the code organized, accessible, and useable. With that in mind, we welcome all contributions and ask that code abide by the following guidelines. Please contact one of the maintainers if you have questions about how to organize, document, and test your code for inclusion in the package. These guidelines will be used in assessing all pull requests for new code.
 
 ## Summary Checklist for Code Contributions ##
 * Code written as functions in modules within subpackages.
@@ -9,12 +9,12 @@ The underlying goal of GDMATE is to enable highly transparent, community-drive c
     - comments preceded by `#` before lines of code
     - modules added to `docs/api.rst`
 *  For new modules, `import` statement added to `gdmate/__init__.py`.
-* Test function for each function added to corresponding test module in `tests`
+* Test function for each function added to corresponding test module in `tests`.
 * Example code usage added and annotated in Jupyter Notebook under `notebooks`.
 
 
 ## Functional-Style Python Modules ##
-Code contributions should be organized into Python _functions_ (which start with a `def` statement) organized into _modules_ (`.py` files). Each module should be placed within a _subpackage_, one of the first-order directories within the `gdmate` source code directory. Contributions may include adding functions to existing modules or creating new modules. 
+Code contributions should be organized into Python _functions_ (which start with a `def` statement) organized into _modules_ (`.py` files). Each module should be placed within a _subpackage_, one of the first-order directories within the `gdmate` source code directory. Contributions may include adding functions to existing modules or creating new modules.
 
 ## Documentation ##
 All new functions should contain a _docstring_, which appears in the code immediately following the `def` statement and is encased in two sets of three double quotation marks (`"""`). The docstring should contain a one-line description of the function, followed by a separate paragraph with any additional details and then a list of all parameters and returns. Below is an example docstring, and additional information can be found [here](https://peps.python.org/pep-0257/).
@@ -30,7 +30,7 @@ def function(A,B):
             This is what A is.
         B : type
             This is what B is.
-    
+
     Returns:
         X : type
             This is what X is.
@@ -75,4 +75,3 @@ def test_function():
 ```
 ## Jupyter Notebooks ##
 It is also important that the functionality of each module be documented in a Jupyter Notebook so users can quickly see examples of how to use GDMATE. Notebooks do not necessarily need to be organized exactly according to the subpackage/module/function hierarchy, but all new code should have corresponding annotated content in a new or existing Jupyter Notebook (in the `notebooks` directory) that demonstrates the key features.
-

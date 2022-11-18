@@ -6,7 +6,7 @@ This guide assumes basic familiarity with Python and installing packages.
 
 ## Basic directory structure ##
 
-The root directory conatins the usual basic repository files (`README.md`, `license.txt`, `.gitignore`), as well as the `setup.py` file for the package and some addiitonal setup files described below. The actual source code for the installable package resides in the `gdmate` directory, which has the same name as the repository so that the package will also be named `gdmate`. Additional directories contain material that isn't part of the installable source code, including documentation (`docs`), Jupyter Notebooks (`notebooks`), and tests (`tests`), which are each discussed below.
+The root directory contains the usual basic repository files (`README.md`, `license.txt`, `.gitignore`), as well as the `setup.py` file for the package and some additional setup files described below. The actual source code for the installable package resides in the `gdmate` directory, which has the same name as the repository so that the package will also be named `gdmate`. Additional directories contain material that isn't part of the installable source code, including documentation (`docs`), Jupyter Notebooks (`notebooks`), and tests (`tests`), which are each discussed below.
 
 Within the `gdmate` directory, the source code is contained within _modules_, which are individual `.py` files that each contain callable _functions_. These modules are organized into _packages_, which are directories containing multiple modules and an `__init__.py` file, which indicates that the modules should be treated together as a package. The principal package is `gdmate`, and each of the subdirectories (e.g. `analysis_modules`, `io`, etc.) are considered a _subpackage_ of gdmate. Each package/subpackage needs to be installed during package setup, and the package/subpackage structure is an important consideration for importing and namespaces wihen using the package.
 
@@ -14,7 +14,7 @@ More about Python modules available [here](https://docs.python.org/3/tutorial/mo
 
 ## Setup file for pip installation ##
 
-At its core, Python package installation is usually handled using pip (even in conda environments). When the command `pip install` is executed, pip will look for a setup file, with one of the standard options being a `setup.py` file that is configured using the setuptools package. A sample file from the Python Packaging Authority is available [here](https://github.com/pypa/sampleproject/blob/main/setup.py). 
+At its core, Python package installation is usually handled using pip (even in conda environments). When the command `pip install` is executed, pip will look for a setup file, with one of the standard options being a `setup.py` file that is configured using the setuptools package. A sample file from the Python Packaging Authority is available [here](https://github.com/pypa/sampleproject/blob/main/setup.py).
 
 Fundamentally, this file contains key metadata (authors, version, etc.), information about the location of source code, and information about dependencies. In GDMATE, the following lines are key for setting up the package:
 
@@ -29,7 +29,7 @@ The `packages` variable specifies where to find the source code and includes bot
 
 The `python_requires` variable specifies the supported version of Python. In this case, we are trying to maintain compatibility with all version of Python 3 from 3.7 on, which is reflected in our testing workflow discussed below.
 
-The `install_requires` variable lists the dependencies for the package. Note that in many cases we can use the dependencies specified here in place of a `requirements.txt` file. 
+The `install_requires` variable lists the dependencies for the package. Note that in many cases we can use the dependencies specified here in place of a `requirements.txt` file.
 
 With this file in place, running `pip install .` in the root directory will install GDMATE in the current Python environment, because pip will search that directory and use the information in `setup.py` to install the package.
 
