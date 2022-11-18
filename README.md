@@ -53,4 +53,4 @@ here are some specific features and pitfalls of the language:
 * Put dots after numbers to make them floats instead of integers.
 
 ## Contributing to GDMATE
-GDMATE is a community-driven, open-source Python package by and for the geodynamics community. If you have code you would like to contribute, please review our [contribution guidelines](https://github.com/gdmate/gdmate/docs/CONTRIBUTING.md) and open a [pull request](https://docs.github.com/en/pull-requests). 
+GDMATE is a community-driven, open-source Python package by and for the geodynamics community. If you have code you would like to contribute, please review our [contribution guidelines](https://gdmate.readthedocs.io/en/latest/CONTRIBUTING.html) and open a [pull request](https://docs.github.com/en/pull-requests).
