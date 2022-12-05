@@ -40,7 +40,9 @@ To add the information from the docstring to the Sphinx documentation for GDMATE
 
 ```
 .. autosummary::
-    :toctree: generated
+    :toctree: generated 
+    :template: module.rst
+    :recursive:
 
     gdmate.module1
     gdmate.module2
