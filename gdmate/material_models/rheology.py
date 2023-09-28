@@ -1,5 +1,21 @@
 import numpy as np
-# TODO: May need to import matplotlib and pandas
+import matplotlib.pyplot as plt
+
+'''
+CHANGES TO MAKE
+- Make sure code is written in most efficient way
+- Make sure code is very well documented (see pyvista_vis - but give longer descriptions for function in docstring (fxn contract))
+- Make tests (test_rheology.py; every function X in rheology.py should have a test_X function that does asserts)
+    - Test rigorously, including for edge cases
+    - OPTIONAL: Write CREs (or equivalent-  prolly with helpful error messages)
+- Make notebook
+- Also add gdmate.rheology to the API file
+- (See code contribution guidelines)
+    - Could also edit the markdown file for code contribution
+- Don't need to hide adiabatic/conductive geotherm fxns
+    - In the future there may be fxns that need to be more private
+- May want to talk about some design choices in fxn (ex: do we want those print statements, do we want to plot things)
+'''
 
 #TODO: Find missing stuff
 
@@ -150,6 +166,7 @@ def geotherm(thicknesses=[20,20,60],depth=600,
     # Combined geotherm
     tt = tc + ta - ast
     
+    # TODO: Consider deleting
     print('Conductive Boundary Temperatures: ', temps)
     print('Conductive Boundary Heat Flows: ', heat_flows)
     
@@ -165,6 +182,7 @@ def geotherm(thicknesses=[20,20,60],depth=600,
         ax.set_xlabel('T (K)')
         ax.set_ylabel('Depth (km)')
     
+    '''
     if save==True:
         output = pd.Series(data=np.concatenate((temps,heat_flows[0:-1],tt[-1]),axis=None),
                            index=['ts1','ts2','ts3','ts4','qs1','qs2','qs3','base'])
@@ -174,5 +192,8 @@ def geotherm(thicknesses=[20,20,60],depth=600,
         filename = 'thermal_' + str(lith) + '_' + str(depth) + '.csv'
                                      
         output.to_csv(filename)
+
+    I commented this out for now because pandas is not a part of gdmate atm
+    '''
     
     return(temps,heat_flows,z,tt,tc,ta)
