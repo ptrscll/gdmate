@@ -17,8 +17,6 @@ CHANGES TO MAKE
 - May want to talk about some design choices in fxn (ex: do we want those print statements, do we want to plot things)
 '''
 
-#TODO: Find missing stuff
-
 def cond_geotherm(thicknesses=[20,20,60],depth=600,
              radiogenic_heat=[1.e-6,2.5e-7,0.],surface_t=273,
              heat_flow=0.05296,thermal_conductivity=2.5):
@@ -28,69 +26,89 @@ def cond_geotherm(thicknesses=[20,20,60],depth=600,
     adiabatic geotherm (i.e., asthenosphere temperature set as LAB
     temperature).
     
+    TODO: Update parameters section
     Parameters:
-        thicknesses: Thicknesses of lithospheric units (km)
-        depth: Depth of model (km)
+        thicknesses:     List of ints representing the thicknesses of 
+                         lithospheric units (km)
+        depth:           Depth of model (km)
         radiogenic_heat: Radiogenic heat production in each unit (W/m^3)
         surface_t: Surface temperature (K)
         heat_flow: Surface heat flow (W/m^3)
         thermal_conductivity: Thermal conductivity (W/m*K)
     
+    TODO: Update Returns section
     Returns:
         temps: Conductive temperatures (K) at each layer boundary
         heat_flows: Heat flows (W/m^3) at each layer boundary
         z: Array of depths (m)
         tc: Conductive temperatures at each depth (K)
     """
-    thick_m = [x*1000 for x in thicknesses]
+
+    # Convert thicknesses to meters
+    thick_m = np.array(thicknesses) * 1000
     
-    # Set up heat flows and temperatures list
-    heat_flows = [heat_flow]
-    temps = [surface_t]
-    
-    for x in range(len(thicknesses)):
+
+    #### Set up arrays of heat flows and temperatures ####
+
+    # Each value represents heat flow/temperature at a boundary between layers
+    # Units: W/m^3 for heat_flows, K for temps
+    boundary_heat_flows = np.zeros(len(thick_m) + 1)
+    boundary_temps = np.zeros(len(thick_m) + 1)
+
+    # At index 0, store the heat flow and temperature at the surface
+    boundary_heat_flows[0] = heat_flow
+    boundary_temps[0] = surface_t
+
+    # Iteratively calculate heat flow and temperature at each layer boundary
+    for i in range(len(thicknesses)):
     
         # Determine heat flows at each layer boundary
-        heat_flows.append(heat_flows[x] - (radiogenic_heat[x]*thick_m[x]))
+        boundary_heat_flows[i + 1] = \
+            (boundary_heat_flows[i] - (radiogenic_heat[i] * thick_m[i]))
         
         # Determine temperatures at each layer boundary
-        temps.append(
-            temps[x] + (heat_flows[x]/thermal_conductivity)*thick_m[x] - 
-            (radiogenic_heat[x]*thick_m[x]**2)/(2.*thermal_conductivity)
-            )
+        boundary_temps[i + 1] = boundary_temps[i] + \
+            (boundary_heat_flows[i] / thermal_conductivity) * thick_m[i] - \
+            (radiogenic_heat[i] * thick_m[i] ** 2)/(2. * thermal_conductivity)
         
-    # Calculate geotherm
-    z = np.arange(0,depth+1,1)*1000 # depths in m
-    tc = np.zeros(depth+1) # empty array of temperature
+
+    #### Calculate geotherm ####
+
+    # Making array of depths (in m)
+    z = np.arange(0,depth+1,1)*1000
+
+    # Making empty array of temperatures (in K)
+    all_temps = np.zeros(depth+1)
     
+    #TODO: Figure out if this part is supposed to be hardcoded to only work with thicknesses of length 3
     # Set boundary locations for slicing tc
     boundaries = [0,thicknesses[0],thicknesses[0]+thicknesses[1],
                   thicknesses[0]+thicknesses[1]+thicknesses[2],
                   depth+1]
     
-    # Get each layer as separate depth array
+    # Split depth and temperature arrays into layers based on layer thicknesses
     layers = []
     temp_layers = []
-    for x in range(len(thicknesses)+1):
-        layers.append(z[boundaries[x]:boundaries[x+1]])
-        temp_layers.append(tc[boundaries[x]:boundaries[x+1]])
+    for i in range(len(thicknesses) + 1):
+        layers.append(z[boundaries[i] : boundaries[i + 1]])
+        temp_layers.append(all_temps[boundaries[i] : boundaries[i + 1]])
 
-    # Assign appropriate temperature values to each set of depths
-    for x in range(len(layers)-1):
-        temp_layers[x] = (
-            temps[x] + (heat_flows[x]/thermal_conductivity)*
-            (layers[x]-boundaries[x]*1000) - 
-            (radiogenic_heat[x]*((layers[x]-boundaries[x]*1000)**2))/
-            (2*thermal_conductivity)
-            )
-    # Assign constant temperature to the asthenosphere before replacing with
-    # adiabatic
-    temp_layers[-1] = temp_layers[-1] + temps[-1]
-    # Combine depths into single array
-    tc = np.concatenate(temp_layers)
+    # Assign appropriate temperature values for each set of depths
+    for i in range(len(thicknesses)):
+        temp_layers[i] = boundary_temps[i] + \
+            (boundary_heat_flows[i] / thermal_conductivity) * \
+                (layers[i] - boundaries[i] * 1000) - \
+            (radiogenic_heat[i] * ((layers[i] - boundaries[i] * 1000) ** 2)) / \
+                (2*thermal_conductivity)
 
-    
-    return(temps,heat_flows,z,tc)
+    # Assign constant temperature to the asthenosphere (bottom layer)
+    # To find the temperatures in the astenosphere, use adiab_geotherm
+    temp_layers[-1] = temp_layers[-1] + boundary_temps[-1]
+
+    # Combine temperatures at all depths into single array
+    all_temps = np.concatenate(temp_layers)
+
+    return (boundary_temps, boundary_heat_flows, z, all_temps)
 
 def adiab_geotherm(z,ast=1573,gravity=9.81,thermal_expansivity=2.e-5,
                    heat_capacity=750,depth=600):
@@ -174,6 +192,8 @@ def geotherm(thicknesses=[20,20,60],depth=600,
     print('LAB Temperature = ', tt[sum(thicknesses)], 'K')
     print('Bottom Temperature = ',tt[-1], 'K')
     
+    # TODO: Consider getting rid of this
+    #   If this is removed, no need for matplotlib
     if plot==True:
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -197,3 +217,5 @@ def geotherm(thicknesses=[20,20,60],depth=600,
     '''
     
     return(temps,heat_flows,z,tt,tc,ta)
+
+print(cond_geotherm())
