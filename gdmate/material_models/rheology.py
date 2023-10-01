@@ -26,22 +26,40 @@ def cond_geotherm(thicknesses=[20,20,60],depth=600,
     adiabatic geotherm (i.e., asthenosphere temperature set as LAB
     temperature).
     
-    TODO: Update parameters section
     Parameters:
-        thicknesses:     List of ints representing the thicknesses of 
-                         lithospheric units (km)
-        depth:           Depth of model (km)
-        radiogenic_heat: Radiogenic heat production in each unit (W/m^3)
-        surface_t: Surface temperature (K)
-        heat_flow: Surface heat flow (W/m^3)
-        thermal_conductivity: Thermal conductivity (W/m*K)
+        thicknesses:          List of ints representing the thicknesses of 
+                              lithospheric units (km)
+
+        depth:                Maximum depth of model (km)
+
+        radiogenic_heat:      List of floats containing radiogenic heat 
+                              production (W/m^3) of each lithospheric unit.
+                              List should have same length as thicknesses
+
+        surface_t:            Surface temperature (K)
+
+        heat_flow:            Surface heat flow (W/m^3)
+
+        thermal_conductivity: Thermal conductivity (W/m*K). Passed as a single
+                              float (this value is assumed to be the same for 
+                              all lithospheric units)
     
-    TODO: Update Returns section
     Returns:
-        temps: Conductive temperatures (K) at each layer boundary
-        heat_flows: Heat flows (W/m^3) at each layer boundary
-        z: Array of depths (m)
-        tc: Conductive temperatures at each depth (K)
+        boundary_temps:      Numpy array containing conductive temperatures (K)
+                             at each layer boundary. First value is the
+                             surface temperature, last value is the 
+                             temperature at the bottom of the deepest layer.
+
+        boundary_heat_flows: Numpy array containing heat flows (W/m^3) at each 
+                             layer boundary. First value is the surface
+                             heat flow, last value is the heat flow at the 
+                             bottom of the deepest layer.
+
+        z:                   Numpy array of depths (m). Depths are spaced
+                             1000 m apart.
+
+        tc:                  Numpy array of conductive temperatures (K) at each
+                             depth given in z
     """
 
     # Convert thicknesses to meters
