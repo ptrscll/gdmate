@@ -17,9 +17,9 @@ CHANGES TO MAKE
 - May want to talk about some design choices in fxn (ex: do we want those print statements, do we want to plot things)
 '''
 
-def cond_geotherm(thicknesses=[20,20,60],depth=600,
-             radiogenic_heat=[1.e-6,2.5e-7,0.],surface_t=273,
-             heat_flow=0.05296,thermal_conductivity=2.5):
+def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
+             radiogenic_heat=[1.e-6, 2.5e-7, 0.], surface_t=273,
+             heat_flow=0.05296, thermal_conductivity=2.5):
     """
     Calculate conductive continental geotherm values
     after Chapman86 and Naliboff scripts. Designed to be combined with
@@ -128,33 +128,47 @@ def cond_geotherm(thicknesses=[20,20,60],depth=600,
 
     return (boundary_temps, boundary_heat_flows, z, all_temps)
 
-def adiab_geotherm(z,ast=1573,gravity=9.81,thermal_expansivity=2.e-5,
-                   heat_capacity=750,depth=600):
+def adiab_geotherm(z, ast=1573, gravity=9.81, thermal_expansivity=2.e-5,
+                   heat_capacity=750, depth=600):
     """
     Calculate adiabatic geotherm. Assumes numpy array of depths (z) has
     already been calculated using conc_geotherm()
     
     Parameters:
-        z: Array of depths (m)
-        ast: Adiabatic surface temperature (K)
-        gravity: Gravitational acceleration (m/s^-2)
-        thermal_expansivity: Thermal expansivity (K^-1)
-        heat_capacity: Heat capacity (J/K*kg)
-        depth: Depth of model (km)
+        z:                   Numpy array of depths (m). Should be the same as
+                             the one calculated in conc_geotherm()
+
+        ast:                 Adiabatic surface temperature (K)
+
+        gravity:             Gravitational acceleration (m/s^-2)
+
+        thermal_expansivity: Thermal expansivity of asthenosphere (K^-1)
+
+        heat_capacity:       Heat capacity of asthenosphere [TODO: is this right?] (J/K*kg)
+
+        depth:               Maximum depth of model (km)
     
     Returns:
-        ta: Adiabatic temperature for each depth (K)
+        adiab_temps: Adiabatic temperature for each depth (K). First
+                     temperature is the surface temperature, last temperature
+                     is the temperature at the deepest depth.
     """
-    ta = np.zeros(depth+1) # empty array for ta
-    for i in range(np.size(z)):
-      if i==0:
-        ta[i] = ast # By design, the adiabatic surface temperature is the LAB temp
-      else:
+
+    # Make empty array of adiabatic temperatures
+    adiab_temps = np.zeros(depth+1)
+
+    # Set first index to adiabatic surface temperature
+    # By design, the adiabatic surface temperature is the LAB temp <-- TODO: What does this mean?
+    adiab_temps[0] = ast
+
+    # Iteratively calculating remaining adiabatic temperatures
+    for i in range(1, np.size(z)):
+
         # See line 124 in source/adiabatic_conditions/compute_profile
-        ta[i] = ta[i-1] * (
+        adiab_temps[i] = adiab_temps[i-1] * (
             1 + (thermal_expansivity * gravity * 1000 * 1./heat_capacity))
         
-    return(ta)
+    return adiab_temps
 
 def geotherm(thicknesses=[20,20,60],depth=600,
              radiogenic_heat=[1.e-6,2.5e-7,0.],surface_t=273,
@@ -219,6 +233,8 @@ def geotherm(thicknesses=[20,20,60],depth=600,
         ax.invert_yaxis()
         ax.set_xlabel('T (K)')
         ax.set_ylabel('Depth (km)')
+        # TODO: Delete this later
+        #plt.savefig("old_geotherm.png")
     
     '''
     if save==True:
@@ -236,4 +252,7 @@ def geotherm(thicknesses=[20,20,60],depth=600,
     
     return(temps,heat_flows,z,tt,tc,ta)
 
-print(cond_geotherm())
+temps,heat_flows,z,tc = cond_geotherm()
+print(adiab_geotherm(z))
+#print(geotherm(plot=False))
+#geotherm(plot=True)
