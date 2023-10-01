@@ -6,6 +6,7 @@ CHANGES TO MAKE
 - Improve overall function descriptions in docstrings
 - Make tests (test_rheology.py; every function X in rheology.py should have a test_X function that does asserts)
     - Test rigorously, including for edge cases
+    - Check if floats/ints are interchangeable for functions
     - OPTIONAL: Write CREs (or equivalent-  prolly with helpful error messages)
 - Make notebook
 - Also add gdmate.rheology to the API file
@@ -29,39 +30,52 @@ def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
     TODO: What does "after Chapman86 and Naliboff scripts" mean. (this also comes up in the geotherm() function)
     
     Parameters:
-        thicknesses:          List of ints representing the thicknesses of 
-                              lithospheric units (km)
+        thicknesses: list of ints
+            A list of ints representing the thicknesses of lithospheric units
+            in units of kilometers (default: [20, 20, 60])
 
-        depth:                Maximum depth of model (km)
+        depth: int
+            Maximum depth of model (km) (default: 600)
 
-        radiogenic_heat:      List of floats containing radiogenic heat 
-                              production (W/m^3) of each lithospheric unit.
-                              List should have same length as thicknesses
+        radiogenic_heat: list of floats    
+            A list of floats containing the radiogenic heat production (W/m^3)
+            of each lithospheric unit. The list should have same length as 
+            thicknesses. (default: [1.e-6, 2.5e-7, 0.])
 
-        surface_t:            Surface temperature (K)
+        surface_t: int           
+            Surface temperature (K) (default: 273)
 
-        heat_flow:            Surface heat flow (W/m^3)
+        heat_flow: float
+            Surface heat flow (W/m^3) (default: 0.05296)
 
-        thermal_conductivity: Thermal conductivity (W/m*K). Passed as a single
-                              float (this value is assumed to be the same for 
-                              all lithospheric units)
+        thermal_conductivity: float
+            Thermal conductivity (W/m*K). This value is assumed to be the same
+            for all lithospheric units (default: 2.5)
     
     Returns:
-        boundary_temps:      Numpy array containing conductive temperatures (K)
-                             at each layer boundary. First value is the
-                             surface temperature, last value is the 
-                             temperature at the bottom of the deepest layer.
+        boundary_temps: Numpy array of floats
+            Numpy array containing conductive temperatures (K) at each layer 
+            boundary. Values are ordered from least to greatest depth, with
+            the first value being the surface temperature and the last value 
+            being the temperature at the bottom of the deepest layer. This 
+            array has a length one greater than the length of thicknesses.
 
-        boundary_heat_flows: Numpy array containing heat flows (W/m^3) at each 
-                             layer boundary. First value is the surface
-                             heat flow, last value is the heat flow at the 
-                             bottom of the deepest layer.
+        boundary_heat_flows: Numpy array of floats
+            Numpy array containing heat flows (W/m^3) at each layer boundary.
+            Values are ordered from least to greatest depth, with the first
+            alue being the surface heat flow and the last value being the heat
+            flow at the bottom of the deepest layer. This array has a length
+            one greater than the length of thicknesses.
 
-        z:                   Numpy array of depths (m). Depths are spaced
-                             1000 m apart.
+        z: Numpy array of ints
+            Numpy array of depths in meters (not kilometers). Depths are spaced
+            1000 m apart and start from 0 and end at the maximum depth given by
+            the parameter depth.
 
-        cond_temps:          Numpy array of conductive temperatures (K) at each
-                             depth given in z
+        cond_temps: Numpy array of floats
+            Numpy array of conductive temperatures (K) at each depth given in z.
+            First temperature is the surface temperature, last temperature is 
+            the temperature at the deepest depth.
     """
 
     # Convert thicknesses to meters
@@ -137,23 +151,35 @@ def adiab_geotherm(z, ast=1573, gravity=9.81, thermal_expansivity=2.e-5,
     already been calculated using conc_geotherm()
     
     Parameters:
-        z:                   Numpy array of depths (m). Should be the same as
-                             the one calculated in conc_geotherm()
+        z: Numpy array of ints
+            Numpy array of depths (in meters). Shallowest depth should be at
+            the start of the array; deepest depth should be at the end of the
+            array.  This array should be the same as the array returned by 
+            conc_geotherm(). There is no default value for this array.
 
-        ast:                 Adiabatic surface temperature (K)
+        ast: int                 
+            Adiabatic surface temperature (K) (default: 1573)
 
-        gravity:             Gravitational acceleration (m/s^-2)
+        gravity: float            
+            Gravitational acceleration (m/s^-2) (default: 9.81)
 
-        thermal_expansivity: Thermal expansivity of asthenosphere (K^-1)
+        thermal_expansivity: float
+            Thermal expansivity of asthenosphere (K^-1) (default: 2.e-5)
 
-        heat_capacity:       Heat capacity of asthenosphere [TODO: is this right?] (J/K*kg)
+        heat_capacity: int
+            Heat capacity of asthenosphere [TODO: is this right?] (J/K*kg) (default: 750)
 
-        depth:               Maximum depth of model (km)
+        depth: int              
+            Maximum depth of model (km). This value should be the same as the 
+            depth used in cond_geotherm() and should equal the last value in z
+            divided by 1000 (since depth and z have different units). 
+            (default: 600)
     
     Returns:
-        adiab_temps: Adiabatic temperature for each depth (K). First
-                     temperature is the surface temperature, last temperature
-                     is the temperature at the deepest depth.
+        adiab_temps: Numpy array of floats
+            Numpy array of conductive temperatures (K) at each depth given in z.
+            First temperature is the surface temperature, last temperature is 
+            the temperature at the deepest depth.
     """
 
     # Make empty array of adiabatic temperatures
@@ -182,57 +208,71 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
     scripts.
 
     Parameters:
-        thicknesses:          List of ints representing the thicknesses of 
-                              lithospheric units (km)
+        thicknesses: list of ints
+            A list of ints representing the thicknesses of lithospheric units
+            in units of kilometers (default: [20, 20, 60])
 
-        depth:                Maximum depth of model (km)
+        depth: int
+            Maximum depth of model (km) (default: 600)
 
-        radiogenic_heat:      List of floats containing radiogenic heat 
-                              production (W/m^3) of each lithospheric unit.
-                              List should have same length as thicknesses
+        radiogenic_heat: list of floats    
+            A list of floats containing the radiogenic heat production (W/m^3)
+            of each lithospheric unit. The list should have same length as 
+            thicknesses. (default: [1.e-6, 2.5e-7, 0.])
 
-        surface_t:            Surface temperature (K)
+        surface_t: int           
+            Surface temperature (K) (default: 273)
 
-        heat_flow:            Surface heat flow (W/m^3)
+        heat_flow: float
+            Surface heat flow (W/m^3) (default: 0.05296)
 
-        thermal_conductivity: Thermal conductivity (W/m*K). Passed as a single
-                              float (this value is assumed to be the same for 
-                              all lithospheric units)
+        thermal_conductivity: float
+            Thermal conductivity (W/m*K). This value is assumed to be the same
+            for all lithospheric units (default: 2.5)
 
-        ast:                  Adiabatic surface temperature (K)
+        ast: int                 
+            Adiabatic surface temperature (K) (default: 1573)
 
-        gravity:              Gravitational acceleration (m/s^-2)
+        gravity: float            
+            Gravitational acceleration (m/s^-2) (default: 9.81)
 
-        thermal_expansivity:  Thermal expansivity of asthenosphere (K^-1)
+        thermal_expansivity: float
+            Thermal expansivity of asthenosphere (K^-1) (default: 2.e-5)
 
-        heat_capacity:        Heat capacity of asthenosphere [TODO: is this right?] (J/K*kg)
+        heat_capacity: int
+            Heat capacity of asthenosphere [TODO: is this right?] (J/K*kg) (default: 750)
 
-        plot:                 Boolean indicating whether to produce a plot of
-                              the geotherm. A value of True indicates that a
-                              plot should be produced.
+        plot: bool            
+            Boolean (True or False) indicating whether to produce a plot of the
+            geotherm. (default: True)
 
-        save:                 Boolean indicating whether to save boundary 
-                              temperatures and heat flows to separate csv file.
-                              A value of True indicates these values should be
-                              saved.
+        save: bool                
+            Boolean indicating whether to save boundary temperatures and heat 
+            flows to separate csv file. (default: True)
     
     Returns:
-        boundary_temps:      Numpy array containing conductive temperatures (K)
-                             at each layer boundary. First value is the
-                             surface temperature, last value is the 
-                             temperature at the bottom of the deepest layer.
+        boundary_temps: Numpy array of floats
+            Numpy array containing conductive temperatures (K) at each layer 
+            boundary. Values are ordered from least to greatest depth, with
+            the first value being the surface temperature and the last value 
+            being the temperature at the bottom of the deepest layer. This 
+            array has a length one greater than the length of thicknesses.
 
-        boundary_heat_flows: Numpy array containing heat flows (W/m^3) at each 
-                             layer boundary. First value is the surface
-                             heat flow, last value is the heat flow at the 
-                             bottom of the deepest layer.
+        boundary_heat_flows: Numpy array of floats
+            Numpy array containing heat flows (W/m^3) at each layer boundary.
+            Values are ordered from least to greatest depth, with the first
+            alue being the surface heat flow and the last value being the heat
+            flow at the bottom of the deepest layer. This array has a length
+            one greater than the length of thicknesses.
 
-        z:                   Numpy array of depths (m). Depths are spaced
-                             1000 m apart.
+        z: Numpy array of ints
+            Numpy array of depths in meters (not kilometers). Depths are spaced
+            1000 m apart and start from 0 and end at the maximum depth given by
+            the parameter depth.
 
-        combined_temps:      Numpy array containing the temperatures (K) of the
-                             combined conductive and adiabatic geotherm at each
-                             depth given in z
+        combined_temps: Numpy array of floats
+            Numpy array containing the temperatures (K) of the combined 
+            conductive and adiabatic geotherm at each depth given in z.
 
     """
 
