@@ -33,10 +33,12 @@ def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
     temperature). Calculations are based on a model of the lithosphere with
     discrete layers of set thicknesses with different radiogenic heat 
     production. Heat flow and thermal conductivity are assumed to be constant
-    at all depths. 
+    at all depths. The bottom layer is assumed to be the asthenosphere and is
+    set to a constant temperature. To get accurate temperatures in this region,
+    you should use adiab_geotherm().
     This function returns the temperatures and heat flows at the boundaries 
     between layers, as well as an array of depths and the temperatures
-    calculated for each of those depths.
+    calculated for each of those depths. 
     TODO: What does "after Chapman86 and Naliboff scripts" mean. (this also comes up in the geotherm() function)
     
     Parameters:
@@ -85,7 +87,8 @@ def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
         cond_temps: Numpy array of floats
             Numpy array of conductive temperatures (K) at each depth given in z.
             First temperature is the surface temperature, last temperature is 
-            the temperature at the deepest depth.
+            the temperature at the deepest depth. Temperatures in the bottom
+            layer (asthenosphere) remain constant.
     """
 
     # Convert thicknesses to meters
@@ -146,7 +149,7 @@ def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
                 (2*thermal_conductivity)
 
     # Assign constant temperature to the asthenosphere (bottom layer)
-    # To find the temperatures in the astenosphere, use adiab_geotherm
+    # To find the temperatures in the asthenosphere, use adiab_geotherm
     temp_layers[-1] = temp_layers[-1] + boundary_temps[-1]
 
     # Combine temperatures at all depths into single array
