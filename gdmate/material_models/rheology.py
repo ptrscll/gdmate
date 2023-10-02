@@ -12,6 +12,11 @@ CHANGES TO MAKE
 - (See code contribution guidelines)
     - Could also edit the markdown file for code contribution
 
+QUESTIONS NOT IN TODOS:
+- Format of testing files differs between helloworld and pyvista_vis? Which one to use?
+    - Currently, I'm using the unit testing format from helloworld
+- Will adding gdmate.rheology to the API file in my fork change the documentation for everyone?
+
 OTHER NOTES
 - Don't need to hide adiabatic/conductive geotherm fxns
     - In the future there may be fxns that need to be more private
