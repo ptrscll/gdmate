@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 
 '''
 CHANGES TO MAKE
-- Improve overall function descriptions in docstrings
 - Make tests (test_rheology.py; every function X in rheology.py should have a test_X function that does asserts)
     - Test rigorously, including for edge cases
     - Check if floats/ints are interchangeable for functions
@@ -26,7 +25,13 @@ def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
     Calculate conductive continental geotherm values
     after Chapman86 and Naliboff scripts. Designed to be combined with
     adiabatic geotherm (i.e., asthenosphere temperature set as LAB
-    temperature).
+    temperature). Calculations are based on a model of the lithosphere with
+    discrete layers of set thicknesses with different radiogenic heat 
+    production. Heat flow and thermal conductivity are assumed to be constant
+    at all depths. 
+    This function returns the temperatures and heat flows at the boundaries 
+    between layers, as well as an array of depths and the temperatures
+    calculated for each of those depths.
     TODO: What does "after Chapman86 and Naliboff scripts" mean. (this also comes up in the geotherm() function)
     
     Parameters:
@@ -147,8 +152,15 @@ def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
 def adiab_geotherm(z, ast=1573, gravity=9.81, thermal_expansivity=2.e-5,
                    heat_capacity=750, depth=600):
     """
-    Calculate adiabatic geotherm. Assumes numpy array of depths (z) has
-    already been calculated using conc_geotherm()
+    Function to calculate adiabatic geotherm. This function is generally 
+    expected to be called after cond_geotherm() and uses the numpy array of
+    depths (z) produced by cond_geotherm(). The function ultimately uses the
+    inputted parameters (which are assumed to be constant throughout the 
+    asthenosphere) to output an array of temperatures for each of
+    the inputted depths based on the adiabatic geotherm. This function will
+    not be likely to produce accurate values for the lithosphere because the
+    adiabatic surface temperature is likely to be much higher than the actual
+    surface temperature. [TODO: Explain why this is]
     
     Parameters:
         z: Numpy array of ints
@@ -158,7 +170,8 @@ def adiab_geotherm(z, ast=1573, gravity=9.81, thermal_expansivity=2.e-5,
             conc_geotherm(). There is no default value for this array.
 
         ast: int                 
-            Adiabatic surface temperature (K) (default: 1573)
+            Surface temperature (K) used for calculating adiabatic geotherm.
+            (default: 1573)
 
         gravity: float            
             Gravitational acceleration (m/s^-2) (default: 9.81)
@@ -204,8 +217,18 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
              gravity=9.81, thermal_expansivity=2.e-5, heat_capacity=750,
              plot=True, save=True):
     """
-    Calculate combined conductive and adiabatic geotherm, after Naliboff
-    scripts.
+    Function to calculate combined conductive and adiabatic geotherm, after 
+    Naliboff scripts. For calculating conductive geotherm, assumes lithosphere
+    is divided into discrete layers with differing radiogenic heat production.
+    This function otherwise assumes most other variables (ex: thermal 
+    conductivity, heat capacity) are constant at all depths.
+
+    This function returns the temperatures and heat flows at the boundaries 
+    between layers, as well as an array of depths and the temperatures
+    calculated for each of those depths. Temperatures are calculated by adding
+    the calculated temperatures from the conductive and adiabatic geotherms.
+
+    TODO: Add discussion of save/plot options if needed
 
     Parameters:
         thicknesses: list of ints
