@@ -21,6 +21,7 @@ OTHER NOTES
 - Don't need to hide adiabatic/conductive geotherm fxns
     - In the future there may be fxns that need to be more private
 - May want to talk about some design choices in fxn (ex: do we want those print statements, do we want to plot things)
+- Would it make sense to let users choose a depth interval?
 '''
 
 def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
@@ -44,7 +45,11 @@ def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
     Parameters:
         thicknesses: list of ints
             A list of ints representing the thicknesses of lithospheric units
-            in units of kilometers (default: [20, 20, 60])
+            in units of kilometers (default: [20, 20, 60]). These ints should
+            sum to the total thickness of the lithosphere. The first value is
+            the thickness of the uppermost lithospheric unit and each
+            subsequent value represents the thickness of the next highest
+            layer.
 
         depth: int
             Maximum depth of model (km) (default: 600)
@@ -140,7 +145,7 @@ def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
         layers.append(z[boundaries[i] : boundaries[i + 1]])
         temp_layers.append(cond_temps[boundaries[i] : boundaries[i + 1]])
 
-    # Assign appropriate temperature values for each set of depths
+    # Calculate temperature values for each set of depths in lithosphere
     for i in range(len(thicknesses)):
         temp_layers[i] = boundary_temps[i] + \
             (boundary_heat_flows[i] / thermal_conductivity) * \
