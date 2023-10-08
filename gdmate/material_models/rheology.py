@@ -396,5 +396,3 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
 
     return (boundary_temps, boundary_heat_flows, z, combined_temps, cond_temps,
             adiab_temps)
-
-geotherm()
