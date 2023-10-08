@@ -131,14 +131,18 @@ def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
     # Making empty array of temperatures (in K)
     cond_temps = np.zeros(depth+1)
     
-    #TODO: Figure out if this part is supposed to be hardcoded to only work with thicknesses of length 3
-    # ANSWER: Yes, it can work for any number of thicknesses - but may have to change other code
-    #   ex: pandas save code
-    #           (this isn't necessary but is definitely helpful)
-    # Set boundary locations for slicing cond_temps
-    boundaries = [0,thicknesses[0],thicknesses[0]+thicknesses[1],
-                  thicknesses[0]+thicknesses[1]+thicknesses[2],
-                  depth+1]
+    # Set boundary depths for slicing cond_temps
+    boundaries = np.zeros(len(thicknesses) + 2, dtype=int)
+
+    # The first boundary is the surface
+    boundaries[0] = 0
+
+    # The next boundaries are found between each lithospheric layer
+    for i in range(len(thicknesses)):
+        boundaries[i + 1] = boundaries[i] + thicknesses[i]
+
+    # The bottom-most boundary is the maximum depth
+    boundaries[-1] = depth + 1
     
     # Split depth and temperature arrays into layers based on layer thicknesses
     layers = []
@@ -364,11 +368,19 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
     # Saving data on boundary conditions to csv file if the user desires    
     if save==True:
 
-        # Getting the row and fields
+        # Getting the row
         data = np.concatenate((boundary_temps, boundary_heat_flows[0:-1], 
                                combined_temps[-1]), axis=None)
+        
+        # Getting the fields
         # TODO: Rename these fields to be more descriptive?
-        fields = ['ts1','ts2','ts3','ts4','qs1','qs2','qs3','base']
+        fields = []
+        for i in range(len(boundary_temps)):
+            fields.append("ts" + str(i + 1))
+        for i in range(len(boundary_heat_flows) - 1):
+            fields.append("qs" + str(i + 1))
+        fields.append('base')
+        #fields = ['ts1','ts2','ts3','ts4','qs1','qs2','qs3','base']
         
         # Getting the name of the file
         lith_thickness = np.sum(thicknesses)
