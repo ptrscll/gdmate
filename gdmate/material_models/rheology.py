@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import csv
 
 '''
 CHANGES TO MAKE
@@ -252,9 +253,11 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
     In addition to returning the values discussed above, this function also
     prints out the boundary temperatures and heat flows, the bottom temperature,
     and the LAB temperature and depth. This information can be used to quickly
-    verify that the inputted parameters are yielding reasonable results
+    verify that the inputted parameters are yielding reasonable results.
 
-    TODO: Add discussion of save/plot options
+    Optionally, this function can also output a graph of the geotherm and save
+    the printed data to a .csv file called 
+    thermal_[lithosphere thickness (km)]_[maximum depth (km)].csv
 
     Parameters:
         thicknesses: list of ints
@@ -356,23 +359,30 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
         ax.invert_yaxis()
         ax.set_xlabel('T (K)')
         ax.set_ylabel('Depth (km)')
-    
-    '''
-    TODO: Do we keep this? (If yes, we need to add pandas to gdmate. We also may want to let user decide filename)
-        We definitely want this option, but for now, we can try to avoid adding another dependency
-        Try to keep output as csv (or similar file that's easy to read/use for other stuff)
-    if save==True:
-        output = pd.Series(data=np.concatenate((temps,heat_flows[0:-1],tt[-1]),axis=None),
-                           index=['ts1','ts2','ts3','ts4','qs1','qs2','qs3','base'])
-        
-        lith = np.sum(thicknesses)
-        
-        filename = 'thermal_' + str(lith) + '_' + str(depth) + '.csv'
-                                     
-        output.to_csv(filename)
 
-    I commented this out for now because pandas is not a part of gdmate atm
-    '''
+    # TODO: Give users control over name of csv file? Change contents of csv file to include full geotherm?
+    # Saving data on boundary conditions to csv file if the user desires    
+    if save==True:
+
+        # Getting the row and fields
+        data = np.concatenate((boundary_temps, boundary_heat_flows[0:-1], 
+                               combined_temps[-1]), axis=None)
+        # TODO: Rename these fields to be more descriptive?
+        fields = ['ts1','ts2','ts3','ts4','qs1','qs2','qs3','base']
+        
+        # Getting the name of the file
+        lith_thickness = np.sum(thicknesses)
+        filename = 'thermal_' + str(lith_thickness) + '_' + str(depth) + '.csv'
+
+        # Writing to the csv file
+
+        # writing to csv file  
+        with open(filename, 'w') as csvfile:  
+            csvwriter = csv.writer(csvfile)  
+            csvwriter.writerow(fields)
+            csvwriter.writerow(data)
 
     return (boundary_temps, boundary_heat_flows, z, combined_temps, cond_temps,
             adiab_temps)
+
+geotherm()
