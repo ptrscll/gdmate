@@ -330,6 +330,14 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
         combined_temps: Numpy array of floats
             Numpy array containing the temperatures (K) of the combined 
             conductive and adiabatic geotherm at each depth given in z.
+        
+        cond_temps: Numpy array of floats
+            Numpy array containing the temperature of the conductive geotherm
+            at each depth given in z.
+        
+        adiab_temps: Numpy array of floats
+            Numpy array containing the temperature of the adiabatic geotherm
+            at each depth given in z.
 
     """
 
