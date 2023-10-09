@@ -174,7 +174,7 @@ def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
 def adiab_geotherm(z, ast=1573, gravity=9.81, thermal_expansivity=2.e-5,
                    heat_capacity=750, depth=600):
     """
-    Function to calculate adiabatic geotherm, based on equation 4.28 in 
+    Function to calculate adiabatic geotherm, based on equation 4.254 in 
     Turcotte and Schubert's Geodynamics textbook. This function is generally
     expected to be called after cond_geotherm() and uses the numpy array of
     depths (z) produced by cond_geotherm(). The function ultimately uses the
