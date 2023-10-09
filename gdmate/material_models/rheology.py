@@ -318,7 +318,7 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
         boundary_heat_flows: Numpy array of floats
             Numpy array containing heat flows (W/m^3) at each layer boundary.
             Values are ordered from least to greatest depth, with the first
-            alue being the surface heat flow and the last value being the heat
+            value being the surface heat flow and the last value being the heat
             flow at the bottom of the deepest layer. This array has a length
             one greater than the length of thicknesses.
 
