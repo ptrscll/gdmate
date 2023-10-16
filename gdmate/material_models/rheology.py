@@ -2,42 +2,27 @@ import numpy as np
 import matplotlib.pyplot as plt
 import csv
 
-'''
-CHANGES TO MAKE
-- Make tests (test_rheology.py; every function X in rheology.py should have a test_X function that does asserts)
-    - Test rigorously, including for edge cases
-    - Check if floats/ints are interchangeable for functions
-    - OPTIONAL: Write CREs (or equivalent-  prolly with helpful error messages)
-- Make notebook
-- Also add gdmate.rheology to the API file (it won't affect the main API file)
-- (See code contribution guidelines)
-    - Could also edit the markdown file for code contribution
-
-OTHER NOTES
-- Don't need to hide adiabatic/conductive geotherm fxns
-    - In the future there may be fxns that need to be more private
-- May want to talk about some design choices in fxn (ex: do we want those print statements, do we want to plot things)
-- Would it make sense to let users choose a depth interval?
-'''
-
 def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
              radiogenic_heat=[1.e-6, 2.5e-7, 0.], surface_t=273,
              heat_flow=0.05296, thermal_conductivity=2.5):
     """
     Calculate conductive continental geotherm values.
 
-    This function is based on Chapman86 and Naliboff scripts. It is designed to
-    be combined with an adiabatic geotherm (which can be made using 
-    adiab_geotherm()). As such, temperatures for the
-    asthenosphere are all set to the LAB (Lithosphere-Asthenosphere Boundary) 
-    temperature). Calculations are based on a model of the lithosphere with
+    This function's calculations are based on scripts by John Naliboff and
+    equations from a 1986 article by D.S. Chapman. To use these equations,
+    this function employs a model of the lithosphere with
     discrete layers of set thicknesses with different radiogenic heat 
-    production. Heat flow and thermal conductivity are assumed to be constant
+    production. Thermal conductivity is assumed to be constant
     at all depths.
+    
+    This function is designed to be combined with an adiabatic geotherm (which
+    can be found using adiab_geotherm()). As such, all temperatures calculated
+    for the asthenosphere are set to the LAB (Lithosphere-Asthenosphere
+    Boundary) temperature. 
+
     This function returns the temperatures and heat flows at the boundaries 
     between layers, as well as an array of depths and the temperatures
-    calculated for each of those depths. If the user would like, this function
-    can also output a graph of the geotherm and save t
+    calculated for each of those depths.
 
     Parameters:
         thicknesses: list of ints
@@ -83,14 +68,14 @@ def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
 
         z: Numpy array of ints
             Numpy array of depths in meters (not kilometers). Depths are spaced
-            1000 m apart and start from 0 and end at the maximum depth given by
-            the parameter depth.
+            1000 m apart. Depths start from 0 and end at the maximum depth given
+            by the parameter depth.
 
         cond_temps: Numpy array of floats
             Numpy array of conductive temperatures (K) at each depth given in z.
             First temperature is the surface temperature, last temperature is 
-            the temperature at the deepest depth. Temperatures in the bottom
-            layer (asthenosphere) remain constant.
+            the temperature at the deepest depth. Temperatures in the
+            asthenosphere remain constant.
     """
 
     # Convert thicknesses to meters
@@ -99,7 +84,8 @@ def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
 
     #### Set up arrays of heat flows and temperatures ####
 
-    # Each value represents heat flow/temperature at a boundary between layers
+    # Each value in one of these arrays represents heat flow/temperature at a 
+    #   boundary between layers
     # Units: W/m^3 for heat_flows, K for temps
     boundary_heat_flows = np.zeros(len(thick_m) + 1)
     boundary_temps = np.zeros(len(thick_m) + 1)
@@ -112,12 +98,12 @@ def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
     for i in range(len(thicknesses)):
     
         # Determine heat flows at each layer boundary
-        # Uses equation 6 in Chapman86
+        # Uses equation 6 in Chapman 1986
         boundary_heat_flows[i + 1] = \
             (boundary_heat_flows[i] - (radiogenic_heat[i] * thick_m[i]))
         
         # Determine temperatures at each layer boundary
-        # Uses equation 5 in Chapman86
+        # Uses equation 5 in Chapman 1986
         boundary_temps[i + 1] = boundary_temps[i] + \
             (boundary_heat_flows[i] / thermal_conductivity) * thick_m[i] - \
             (radiogenic_heat[i] * thick_m[i] ** 2)/(2. * thermal_conductivity)
@@ -128,10 +114,10 @@ def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
     # Making array of depths (in m)
     z = np.arange(0,depth+1,1)*1000
 
-    # Making empty array of temperatures (in K)
+    # Make empty array of temperatures (in K)
     cond_temps = np.zeros(depth+1)
     
-    # Set boundary depths for slicing cond_temps
+    # Make empty array of depths of boundaries (in km) between layers
     boundaries = np.zeros(len(thicknesses) + 2, dtype=int)
 
     # The first boundary is the surface
@@ -144,7 +130,7 @@ def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
     # The bottom-most boundary is the maximum depth
     boundaries[-1] = depth + 1
     
-    # Split depth and temperature arrays into layers based on layer thicknesses
+    # Split depth and temperature arrays into layers based on layer boundaries
     layers = []
     temp_layers = []
     for i in range(len(thicknesses) + 1):
@@ -154,7 +140,7 @@ def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
     # Calculate temperature values for each set of depths in each layer
     # For calculations, boundary depths must be multiplied by 1000 to convert
     # from km to m.
-    # Calculations are based on equation 4 in Chapman86 
+    # Calculations are based on equation 4 in Chapman 1986 
     for i in range(len(thicknesses)):
         temp_layers[i] = boundary_temps[i] + \
             (boundary_heat_flows[i] / thermal_conductivity) * \
@@ -162,38 +148,40 @@ def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
             (radiogenic_heat[i] * ((layers[i] - boundaries[i] * 1000) ** 2)) / \
                 (2*thermal_conductivity)
 
-    # Assign constant temperature to the asthenosphere (bottom layer)
+    # Assign the same temperature to the whole bottom layer (the asthenosphere)
     # To find the temperatures in the asthenosphere, use adiab_geotherm
     temp_layers[-1] = temp_layers[-1] + boundary_temps[-1]
 
-    # Combine temperatures at all depths into single array
+    # Combine temperatures at all depths back into single array
     cond_temps = np.concatenate(temp_layers)
 
     return (boundary_temps, boundary_heat_flows, z, cond_temps)
 
+
 def adiab_geotherm(z, ast=1573, gravity=9.81, thermal_expansivity=2.e-5,
                    heat_capacity=750, depth=600):
     """
-    Function to calculate adiabatic geotherm, based on equation 4.254 in 
+    Function to calculate adiabatic geotherm using equation 4.254 in 
     Turcotte and Schubert's Geodynamics textbook. This function is generally
     expected to be called after cond_geotherm() and uses the numpy array of
-    depths (z) produced by cond_geotherm(). The function ultimately uses the
+    depths (z) produced by cond_geotherm(). The function uses the
     inputted parameters (which are assumed to be constant throughout the 
-    asthenosphere) to output an array of temperatures for each of
-    the inputted depths based on the adiabatic geotherm. This function is not
-    meant to predict temperatures in the lithosphere because the formulas it
-    uses only account for adiabatic processes and ignore conductive heat
-    transfer.
+    asthenosphere) to calculate an array of adiabatic temperatures for each of
+    the inputted depths. 
+    
+    This function is not meant to predict temperatures in the lithosphere 
+    because the formulas it uses only account for adiabatic processes and
+    ignore conductive heat transfer.
     
     Parameters:
         z: Numpy array of ints
             Numpy array of depths (in meters). Shallowest depth should be at
             the start of the array; deepest depth should be at the end of the
             array.  This array should be the same as the array returned by 
-            conc_geotherm(). There is no default value for this array.
+            cond_geotherm(). There is no default value for this array.
 
         ast: int                 
-            Temperature at adiabatic surface (LAB) (K) used for calculating
+            Temperature at adiabatic surface (K) used for calculating
             adiabatic geotherm (default: 1573)
 
         gravity: float            
@@ -213,7 +201,7 @@ def adiab_geotherm(z, ast=1573, gravity=9.81, thermal_expansivity=2.e-5,
     
     Returns:
         adiab_temps: Numpy array of floats
-            Numpy array of conductive temperatures (K) at each depth given in z.
+            Numpy array of adiabatic temperatures (K) at each depth given in z.
             First temperature is the surface temperature, last temperature is 
             the temperature at the deepest depth.
     """
@@ -225,13 +213,13 @@ def adiab_geotherm(z, ast=1573, gravity=9.81, thermal_expansivity=2.e-5,
     # By design, the adiabatic surface temperature is the LAB temp
     adiab_temps[0] = ast
 
-    # Iteratively calculating remaining adiabatic temperatures
+    # Iteratively calculate remaining adiabatic temperatures
     for i in range(1, np.size(z)):
 
-        # See line 131 in source/adiabatic_conditions/compute_profile in ASPECT
-        #   source code.
-        # Numerator of fraction is multiplied by 1000 to account for delta z of
-        # 1000 m
+        # This line is based off line 131 in
+        #   source/adiabatic_conditions/compute_profile in ASPECT source code.
+        # Numerator of fraction is multiplied by 1000 to account for delta z =
+        #   1000 m
         adiab_temps[i] = adiab_temps[i-1] * \
             (1 + (thermal_expansivity * gravity * 1000 * 1./heat_capacity))
         
@@ -244,20 +232,21 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
              plot=True, save=True):
     """
     Function to calculate combined conductive and adiabatic geotherm, based on 
-    Naliboff scripts. For calculating conductive geotherm, assumes lithosphere
-    is divided into discrete layers with differing radiogenic heat production.
-    This function otherwise assumes most other variables (ex: thermal 
-    conductivity, heat capacity) are constant at all depths.
+    scripts by John Naliboff. For calculating conductive geotherm, assumes
+    lithosphere is divided into discrete layers with differing radiogenic heat
+    production. This function otherwise assumes most other variables (ex:
+    thermal conductivity, heat capacity) are constant at all depths.
 
     This function returns the temperatures and heat flows at the boundaries 
-    between layers, as well as an array of depths and the temperatures
-    calculated for each of those depths. Temperatures are calculated by adding
-    the calculated temperatures from the conductive and adiabatic geotherms.
+    between layers, as well as an array of depths and the adiabatic, conductive,
+    and combined adiabatic and conductive temperatures calculated for each of
+    those depths.
 
     In addition to returning the values discussed above, this function also
-    prints out the boundary temperatures and heat flows, the bottom temperature,
-    and the LAB temperature and depth. This information can be used to quickly
-    verify that the inputted parameters are yielding reasonable results.
+    prints out the boundary temperatures and heat flows, the LAB temperature 
+    and depth, and the temperature at the maximum depth analyzed by the model. 
+    This information can be used to verify that inputted parameters are 
+    yielding reasonable results.
 
     Optionally, this function can also output a graph of the geotherm and save
     the printed data to a .csv file called 
@@ -287,7 +276,7 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
             for all lithospheric units (default: 2.5)
 
         ast: int                                  
-            Temperature at adiabatic surface (LAB) (K) used for calculating
+            Temperature at adiabatic surface (K) used for calculating
             adiabatic geotherm (default: 1573)
 
         gravity: float            
@@ -328,31 +317,30 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
             the parameter depth.
 
         combined_temps: Numpy array of floats
-            Numpy array containing the temperatures (K) of the combined 
-            conductive and adiabatic geotherm at each depth given in z.
+            Numpy array containing the combined conductive and adiabatic 
+            temperatures (K) at each depth given in z.
         
         cond_temps: Numpy array of floats
-            Numpy array containing the temperature of the conductive geotherm
-            at each depth given in z.
+            Numpy array containing the conductive temperature at each depth in z
         
         adiab_temps: Numpy array of floats
-            Numpy array containing the temperature of the adiabatic geotherm
-            at each depth given in z.
+            Numpy array containing the adiabatic temperature at each depth in z
 
     """
 
-    # Calculate conductive geotherm
+    # Calculate conductive geotherm using cond_geotherm
     boundary_temps, boundary_heat_flows, z, cond_temps = cond_geotherm( \
         thicknesses=thicknesses, depth=depth, radiogenic_heat=radiogenic_heat, \
         surface_t=surface_t, heat_flow=heat_flow, \
         thermal_conductivity=thermal_conductivity)
     
-    # Calculate adiabatic geotherm
+    # Calculate adiabatic geotherm using adiab_geotherm
     adiab_temps = adiab_geotherm(z=z, ast=ast, gravity=gravity, 
                                  thermal_expansivity=thermal_expansivity, 
                                  heat_capacity=heat_capacity, depth=depth)
     
-    # Calculate combined geotherm
+    # Calculate combined geotherm by adding conductive and adiabatic
+    #   temperatures and subtracting the adiabatic surface temperature
     combined_temps = cond_temps + adiab_temps - ast
     
     # Printing relevant information from geotherm calculations
@@ -363,7 +351,7 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
     print('LAB Temperature = ', combined_temps[sum(thicknesses)], 'K')
     print('Bottom Temperature = ',combined_temps[-1], 'K')
     
-    # Plotting the temperature and depth arrays if the plot parameter is True
+    # Plotting combined geotherm if the plot parameter is True
     if plot == True:
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -372,31 +360,26 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
         ax.set_xlabel('T (K)')
         ax.set_ylabel('Depth (km)')
 
-    # TODO: Give users control over name of csv file? Change contents of csv file to include full geotherm?
-    # Saving data on boundary conditions to csv file if the user desires    
+    # Saving data on boundary conditions to csv file if save parameter is True  
     if save==True:
 
-        # Getting the row
+        # Getting the row of data
         data = np.concatenate((boundary_temps, boundary_heat_flows[0:-1], 
                                combined_temps[-1]), axis=None)
         
         # Getting the fields
-        # TODO: Rename these fields to be more descriptive?
         fields = []
         for i in range(len(boundary_temps)):
             fields.append("ts" + str(i + 1))
         for i in range(len(boundary_heat_flows) - 1):
             fields.append("qs" + str(i + 1))
         fields.append('base')
-        #fields = ['ts1','ts2','ts3','ts4','qs1','qs2','qs3','base']
         
         # Getting the name of the file
         lith_thickness = np.sum(thicknesses)
         filename = 'thermal_' + str(lith_thickness) + '_' + str(depth) + '.csv'
 
-        # Writing to the csv file
-
-        # writing to csv file  
+        # writing the fields and row of data to the csv file  
         with open(filename, 'w') as csvfile:  
             csvwriter = csv.writer(csvfile)  
             csvwriter.writerow(fields)
