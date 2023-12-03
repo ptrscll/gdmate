@@ -2,8 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import csv
 
-# Testing git
-
 def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
              radiogenic_heat=[1.e-6, 2.5e-7, 0.], surface_t=273,
              heat_flow=0.05296, thermal_conductivity=2.5):
@@ -389,3 +387,84 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
 
     return (boundary_temps, boundary_heat_flows, z, combined_temps, cond_temps,
             adiab_temps)
+
+
+def drucker_prager(pressure, internal_friction=30, cohesion=2e7):
+    """
+    Calculate failure strength of a material from a given pressure, angle of 
+    internal friction, and cohesion using Drucker-Prager criterion.
+
+    Parameters:
+        pressure: int or float
+            Pressure (Pa)
+
+        internal_friction: int or float
+            Angle of internal friction (degrees) (default: 30)
+
+        cohesion: int or float
+            Cohesion (Pa) (default: 2e7)
+    
+    Returns:
+        strength: float
+            Strength (Pa)
+
+    """
+    friction_rad = np.radians(internal_friction)
+    failure_strength = pressure * np.sin(friction_rad) + \
+        cohesion * np.cos(friction_rad)
+    
+    return failure_strength
+
+
+def viscosity(A, n, d, m, E, P, V, T, strain_rate=1e-15, R=8.31451):
+    """
+    Calculate viscosity of a material according to equation from the ASPECT 
+    manual.
+    TODO: Does it make sense to still cite ASPECT manual here, or is this formula common knowledge
+    (it matches the formula on the course slides but idk if there's alternate versions).
+    If we still want to cite the manual, then Where in the manual is this equation?
+    TODO: Confirm units for A
+    
+    For dislocation creep, m = 0. For diffusion creep, n = 1.
+    
+    Parameters:
+        A: float
+            Power-law constant (kg * m^-2 * s^-1)
+
+        n: int
+            Stress exponent. n = 1 for diffusion creep.
+
+        d: float
+            Grain size of the material (m)
+
+        m: int
+            Grain size exponent. m = 0 for dislocation creep.
+
+        E: float
+            Activation energy (J/mol)
+
+        P: float
+            Pressure (Pa)
+
+        V: float
+            Activation volume (m^3/mol)
+
+        T: float
+            Temperature (K)
+
+        strain_rate: float
+            square root of the second invariant of the strain rate tensor (s^-1)
+            (default value: 1e-15)
+            [TODO: What does this mean?]
+            
+        R: float
+            Gas constant (J/K*mol) (default value: 8.31451)
+        
+    Returns:
+        visc: float
+            Viscosity of the material (Pa*s)
+    """
+    visc = (0.5 * A**(-1/n) * d**(m/n) * 
+            (strain_rate)**((1-n)/n)*np.exp((E+P*V)/(n*R*T)))
+
+    return(visc)
