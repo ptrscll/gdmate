@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import csv
 
+# Testing git
+
 def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
              radiogenic_heat=[1.e-6, 2.5e-7, 0.], surface_t=273,
              heat_flow=0.05296, thermal_conductivity=2.5):
