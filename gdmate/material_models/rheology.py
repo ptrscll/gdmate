@@ -456,7 +456,7 @@ def viscosity(A, n, d, m, E, P, V, T, strain_rate=1e-15, R=8.31451):
             square root of the second invariant of the strain rate tensor (s^-1)
             (default value: 1e-15)
             [TODO: What does this mean?]
-            
+
         R: float
             Gas constant (J/K*mol) (default value: 8.31451)
         
@@ -468,3 +468,245 @@ def viscosity(A, n, d, m, E, P, V, T, strain_rate=1e-15, R=8.31451):
             (strain_rate)**((1-n)/n)*np.exp((E+P*V)/(n*R*T)))
 
     return(visc)
+
+
+def visc_diffusion(A, d, m, E, P, V, T, strain_rate=1e-15, R=8.31451):
+    """
+    Calculate viscosity of a material undergoing diffusion creep.
+    Calculations are based on equation from the ASPECT manual.
+    TODO: Does it make sense to still cite ASPECT manual here, or is this formula common knowledge
+    (it matches the formula on the course slides but idk if there's alternate versions).
+    If we still want to cite the manual, then Where in the manual is this equation?
+    TODO: Confirm units for A
+    
+    Parameters:
+        A: float
+            Power-law constant (kg * m^-2 * s^-1)
+
+        d: float
+            Grain size of the material (m)
+
+        m: int
+            Grain size exponent.
+
+        E: float
+            Activation energy (J/mol)
+
+        P: float
+            Pressure (Pa)
+
+        V: float
+            Activation volume (m^3/mol)
+
+        T: float
+            Temperature (K)
+
+        strain_rate: float
+            square root of the second invariant of the strain rate tensor (s^-1)
+            (default value: 1e-15)
+            [TODO: What does this mean?]
+
+        R: float
+            Gas constant (J/K*mol) (default value: 8.31451)
+        
+    Returns:
+        visc: float
+            Viscosity of the material (Pa*s)
+    """
+    
+    visc = viscosity(A=A, n=1, d=d, m=m, E=E, P=P, V=V, T=T, 
+                      strain_rate=strain_rate, R=R)
+    
+    return(visc)
+
+
+def visc_dislocation(A, n, E, P, V, T, strain_rate=1e-15, R=8.31451):
+    
+    """
+    Calculate viscosity for a material undergoing dislocation creep.
+    Calculations based on equation from the ASPECT manual.
+    TODO: Does it make sense to still cite ASPECT manual here, or is this formula common knowledge
+    (it matches the formula on the course slides but idk if there's alternate versions).
+    If we still want to cite the manual, then Where in the manual is this equation?
+    TODO: Confirm units for A
+    
+    Parameters:
+        A: float
+            Power-law constant (kg * m^-2 * s^-1)
+
+        n: int
+            Stress exponent.
+
+        E: float
+            Activation energy (J/mol)
+
+        P: float
+            Pressure (Pa)
+
+        V: float
+            Activation volume (m^3/mol)
+
+        T: float
+            Temperature (K)
+
+        strain_rate: float
+            square root of the second invariant of the strain rate tensor (s^-1)
+            (default value: 1e-15)
+            [TODO: What does this mean?]
+
+        R: float
+            Gas constant (J/K*mol) (default value: 8.31451)
+        
+    Returns:
+        visc: float
+            Viscosity of the material (Pa*s)
+    """
+    
+    # Value for d (grain size) is irrelevant when dealing with dislocation creep
+    # Thus, we arbitrarily assign d to be 1 for this function
+    visc = viscosity(A=A, n=n, d=1, m=0, E=E, P=P, V=V, T=T, 
+                      strain_rate=strain_rate, R=R)
+    
+    return(visc)
+
+
+def visc_composite(visc_dislocation, visc_diffusion):
+    """
+    Calculate composite viscosity of a material by combining the viscosities
+    calculating from the diffusion creep and dislocation creep flow laws. Both
+    viscosities must be pre-calculated and passed into this function as
+    parameters.
+    
+    Parameters:
+        visc_dislocation: float
+            Dislocation creep viscosity (Pa*s). Can be calculated from function
+            of the same name.
+        
+        visc_diffusion: float
+            Diffusion creep viscosity (Pa*s). Can be calculated from function of
+            the same name.
+        
+    Returns:
+        visc: float
+            Composite viscosity of the material (Pa*s)
+    """
+    
+    # TODO: What is the basis of these calculations?
+    visc = (
+        (visc_dislocation * visc_diffusion) / 
+        (visc_dislocation + visc_diffusion)
+    )
+    
+    return(visc)
+
+
+def adiab_density(input_density, thermal_expansivity, temperature, 
+                   reference_temp):
+    """
+    Calculate array of adiabatic densities at different depths based on
+    input densities and temperatures at different depths. The calculated
+    density accounts for temperature variations in different depths/layers 
+    within the Earth.
+
+    TODO: Find reference source (and finish docstring)
+    TODO: Replace with combined/adiabatic temps?
+
+    Parameters:
+        input_density: Numpy array of floats
+            Input density (kg/m^2)
+
+        thermal_expansivity: Float
+            Thermal expansivity (K^-1)
+
+        temperature: Temperature (K) <-- comb_temps in fxn call
+        reference_temp: Reference temperature (K) <-- adiab_temps in fxn call
+    
+    Returns:
+        output: Numpy array of floats
+            Adiabatic densities (kg/m^2) corresponding to each input density
+
+    """
+    
+    output = input_density * (
+        1 - thermal_expansivity * (temperature - reference_temp))
+    
+    return(output)
+
+
+def density_profile(z, thicknesses=[20, 20, 60], 
+                    densities=[2800, 2900, 3300, 3300]):
+    """
+    Create numpy array of densities for every depth in a given depth array (z).
+    
+    Densities are made uniform for each layer in the model. Thicknesses and 
+    densities of each individual layer may be passed into the function as
+    parameters. Default values are for (in order) the upper crust, lower crust,
+    mantle lithosphere, and mantle asthenosphere.
+        
+    Parameters:
+        z: Numpy array of ints
+            Sorted numpy array of depths in meters (not kilometers)
+
+        thicknesses: Numpy array of ints
+            Thicknesses (km) of each layer, ordered from top to bottom and
+            excluding the bottom layer (which is assumed to extend to the
+            greatest depth in z)
+        
+        densities: Numpy array of ints
+            Densities (kg/m^2) for each layer, order from top to bottom (and
+            including the bottom layer).
+    
+    Returns:
+        rho: Numpy array of ints
+            Numpy array of densities (kg/m^2) corresponding to each depth
+
+    """
+    rho = np.zeros(len(z))   # Density array to be returned
+    depth_index = 0          # Variable storing the current index in z and rho
+    layer_bottom = 0         # Variable storing the bottom of the current layer
+
+    # For each layer, set the densities at every depth in the layer to the
+    # same density (as given in the densities array)
+    for i in range(len(thicknesses)):
+        layer_bottom += thicknesses[i] * 1000
+        while z[depth_index] < layer_bottom:
+            rho[depth_index] = densities[i]
+            depth_index += 1
+
+    # Setting the densities in the depths found in the bottom layer to the last
+    # provided density value
+    rho[depth_index:] = densities[-1]
+    
+    return rho
+
+
+def pressure(z, rho, g=9.81):
+    """
+    Produce an array of pressures at given depths in the Earth based on array
+    of densities at different depths.
+    
+    Parameters:
+        z: Numpy array of ints
+            Sorted numpy array of depths in meters (not kilometers). First value
+            should be 0, representing Earth's surface.
+
+        rho: Numpy array of floats
+            Numpy array of densities (kg/m^2) at each depth given in z.
+        
+        g: float
+            Acceleration due to gravity (m/s^2) (default value: 9.81)
+    
+    Returns:
+        P: Array of pressures (Pa) for each of the depths given in z. Note that
+        first value is fixed to 0.
+    """
+    P = np.zeros(len(z))
+
+    # Iteratively calculating the pressure at each depth based on the pressure
+    # at the previous depth. 
+    # Note that P[0] is already set to 0 and doesn't need to be recalculated
+    for i in range(1,len(z)):
+        P[i] = P[i-1] + rho[i] * g * (z[i]-z[i-1])
+    
+    return P
+
