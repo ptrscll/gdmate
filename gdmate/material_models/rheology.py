@@ -833,10 +833,10 @@ def viscosity_profile(A, A_df, n, d, m, E, E_df, V, V_df,
             Numpy array containing the pressure (Pa) at each depth in z
     """
     # Calculate geotherm to get z, comb_temps, and adiab_temps
-    # TODO: Add flag controlling whether geotherm prints LAB temp, etc. (don't add to pull req tho)
     bound_temps, bound_heat_flows, z, comb_temps, cond_temps, adiab_temps = \
         geotherm(thicknesses=thicknesses, depth=depth, heat_flow=heat_flow,
-                 plot=plot, thermal_expansivity=thermal_expansivity)
+                 plot=plot, thermal_expansivity=thermal_expansivity, 
+                 printout=False)
     
     # Assign input densities to array
     rho = density_profile(z=z, thicknesses=thicknesses, densities=densities,
