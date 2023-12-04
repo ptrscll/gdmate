@@ -572,22 +572,22 @@ def visc_dislocation(A, n, E, P, V, T, strain_rate=1e-15, R=8.31451):
 
 def visc_composite(visc_dislocation, visc_diffusion):
     """
-    Calculate composite viscosity of a material by combining the viscosities
-    calculating from the diffusion creep and dislocation creep flow laws. Both
-    viscosities must be pre-calculated and passed into this function as
-    parameters.
+    Calculate an array of composite viscosities for a material by combining
+    arrays of viscosities calculated from the diffusion creep and dislocation
+    creep flow laws. Both viscosity arrays must be pre-calculated and passed 
+    into this function as parameters.
     
     Parameters:
-        visc_dislocation: float
-            Dislocation creep viscosity (Pa*s). Can be calculated from function
-            of the same name.
+        visc_dislocation: Numpy array of floats
+            Array of dislocation creep viscosity (Pa*s). 
+            Individual values can be calculated from function of the same name.
         
-        visc_diffusion: float
-            Diffusion creep viscosity (Pa*s). Can be calculated from function of
-            the same name.
+        visc_diffusion: Numpy array of floats
+            Array of diffusion creep viscosity (Pa*s).
+            Individual values can be calculated from function of the same name.
         
     Returns:
-        visc: float
+        visc: Numpy array of floats
             Composite viscosity of the material (Pa*s)
     """
     
