@@ -229,7 +229,7 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
              radiogenic_heat=[1.e-6, 2.5e-7, 0.], surface_t=273, 
              heat_flow=0.05296, thermal_conductivity=2.5, ast=1573,
              gravity=9.81, thermal_expansivity=2.e-5, heat_capacity=750,
-             plot=True, save=True):
+             plot=True, save=True, printout=True):
     """
     Function to calculate combined conductive and adiabatic geotherm, based on 
     scripts by John Naliboff. For calculating conductive geotherm, assumes
@@ -243,10 +243,10 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
     those depths.
 
     In addition to returning the values discussed above, this function also
-    prints out the boundary temperatures and heat flows, the LAB temperature 
-    and depth, and the temperature at the maximum depth analyzed by the model. 
-    This information can be used to verify that inputted parameters are 
-    yielding reasonable results.
+    optionally prints out the boundary temperatures and heat flows, the LAB 
+    temperature and depth, and the temperature at the maximum depth analyzed by
+    the model. This information can be used to verify that inputted parameters
+    are yielding reasonable results.
 
     Optionally, this function can also output a graph of the geotherm and save
     the printed data to a .csv file called 
@@ -295,6 +295,10 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
         save: bool                
             Boolean indicating whether to save boundary temperatures and heat 
             flows to separate csv file. (default: True)
+
+        printout: bool
+            Boolean indicating whether to print out boundary temperature
+            information and other information.
     
     Returns:
         boundary_temps: Numpy array of floats
@@ -343,13 +347,14 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
     #   temperatures and subtracting the adiabatic surface temperature
     combined_temps = cond_temps + adiab_temps - ast
     
-    # Printing relevant information from geotherm calculations
-    print('Conductive Boundary Temperatures: ', boundary_temps)
-    print('Conductive Boundary Heat Flows: ', boundary_heat_flows)
-    
-    print('LAB Depth       = ', sum(thicknesses), 'km')
-    print('LAB Temperature = ', combined_temps[sum(thicknesses)], 'K')
-    print('Bottom Temperature = ',combined_temps[-1], 'K')
+    # Printing relevant information from geotherm calculations if requested
+    if printout == True:
+        print('Conductive Boundary Temperatures: ', boundary_temps)
+        print('Conductive Boundary Heat Flows: ', boundary_heat_flows)
+
+        print('LAB Depth       = ', sum(thicknesses), 'km')
+        print('LAB Temperature = ', combined_temps[sum(thicknesses)], 'K')
+        print('Bottom Temperature = ',combined_temps[-1], 'K')
     
     # Plotting combined geotherm if the plot parameter is True
     if plot == True:
