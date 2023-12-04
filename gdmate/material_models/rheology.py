@@ -431,14 +431,14 @@ def viscosity(A, n, d, m, E, P, V, T, strain_rate=1e-15, R=8.31451):
         A: float
             Power-law constant (kg * m^-2 * s^-1)
 
-        n: int
-            Stress exponent. n = 1 for diffusion creep.
+        n: float
+            Stress exponent. n = 1. for diffusion creep.
 
         d: float
             Grain size of the material (m)
 
-        m: int
-            Grain size exponent. m = 0 for dislocation creep.
+        m: float
+            Grain size exponent. m = 0. for dislocation creep.
 
         E: float
             Activation energy (J/mol)
@@ -486,7 +486,7 @@ def visc_diffusion(A, d, m, E, P, V, T, strain_rate=1e-15, R=8.31451):
         d: float
             Grain size of the material (m)
 
-        m: int
+        m: float
             Grain size exponent.
 
         E: float
@@ -534,7 +534,7 @@ def visc_dislocation(A, n, E, P, V, T, strain_rate=1e-15, R=8.31451):
         A: float
             Power-law constant (kg * m^-2 * s^-1)
 
-        n: int
+        n: float
             Stress exponent.
 
         E: float
@@ -650,11 +650,11 @@ def density_profile(z, thicknesses=[20, 20, 60],
         thicknesses: Numpy array of ints
             Thicknesses (km) of each layer, ordered from top to bottom and
             excluding the bottom layer (which is assumed to extend to the
-            greatest depth in z)
+            greatest depth in z) (default: [20, 20, 60])
         
         densities: Numpy array of ints
             Densities (kg/m^2) for each layer, order from top to bottom (and
-            including the bottom layer).
+            including the bottom layer). (default: [2800, 2900, 3300, 3300])
     
     Returns:
         rho: Numpy array of ints
@@ -710,3 +710,196 @@ def pressure(z, rho, g=9.81):
     
     return P
 
+
+def viscosity_profile(A, A_df, n, d, m, E, E_df, V, V_df, 
+                      thicknesses=[20,20,60], densities=[2800,2900,3300,3300],
+                      heat_flow=0.05296, thermal_expansivity=2.e-5, depth=600,
+                      strain_rate=1e-15, R=8.31451, plot=True):
+    """
+    Function to calculate composite viscosity profile using factors as reported
+    to ASPECT. Treats the Earth's interior as divided into discrete layers with
+    different material properties. Default values for layer thicknesses and 
+    densities are given for (in order) the upper crust, lower crust, mantle 
+    lithosphere, and mantle asthenosphere.
+
+    This function returns the dislocation creep, diffusion creep, and composite
+    viscosities at 1000 m intervals corresponding to depths in a z array (which
+    is also returned). The temperature and pressure at each depth are also
+    returned.
+
+    Optionally, this function can output a graph of the geotherm and the 
+    dislocation creep, diffusion creep, and composite viscosity profiles that
+    were found.
+
+    Note that any parameter that consists of an array of values corresponding
+    to each layer is ordered from top-most layer to bottom-most layer.
+    
+    Parameters:
+        A: List of floats
+            List of power-law constants for each layer for dislocation creep
+            viscosity calculations
+
+        A_df: List of floats
+            List of power-law constants for each layer for diffusion creep
+            viscosity calculations
+
+        n: List of floats
+            List of stress exponents for each layer for dislocation creep 
+            viscosity calculations
+
+        d: float
+            Grain size (m). Assumed constant for all layers [TODO: Change this?]
+
+        m: List of floats
+            List of grain size exponents for each layer for diffusion creep 
+            viscosity calculations
+
+        E: List of floats
+            List of activation energies (J/mol) for each layer for dislocation
+            creep calculations
+
+        E_df: List of floats
+            List of activation energies (J/mol) for each layer for diffusion
+            creep calculations
+
+        V: List of floats
+            List of activation volumes (m^3/mol) for each layer for dislocation
+            creep
+
+        V_df: List of floats
+            List of activation volumes (m^3/mol) for each layer for diffusion
+            creep
+
+        thicknesses: Numpy array of ints
+            Thicknesses (km) of each layer, ordered from top to bottom and
+            excluding the bottom layer (which is assumed to extend to the
+            greatest depth in z) (default: [20, 20, 60])
+        
+        densities: Numpy array of ints
+            Densities (kg/m^2) for each layer, order from top to bottom (and
+            including the bottom layer). (default: [2800, 2900, 3300, 3300])
+
+        heat_flow: float
+            Surface heat flow (W/m^3) (default: 0.05296)
+
+        
+        thermal_expansivity: float
+            Thermal expansivity (K^-1) (default: 2.e-5)
+
+        depth: int
+            Maximum depth of model (km) (default: 600)
+
+        strain_rate: float
+            square root of the second invariant of the strain rate tensor (s^-1)
+            (default value: 1e-15)
+            [TODO: What does this mean?]
+
+        R: float
+            Gas constant (J/K*mol) (default value: 8.31451)
+
+        plot: bool            
+            Boolean (True or False) indicating whether to produce plots of the
+            geotherm and viscosity profiles. (default: True)
+
+    Returns:
+        z: Numpy array of ints
+            Numpy array of depths in meters (not kilometers). Depths are spaced
+            1000 m apart and start from 0 and end at the maximum depth given by
+            the parameter depth.
+
+        comp: Numpy array of floats
+            Numpy array of viscosities (Pa*s) for composite creep at each depth
+            in z.
+
+        disl: Numpy array of floats
+            Numpy array of viscosities (Pa*s) for dislocation creep at each depth
+            in z.
+
+        diff: Numpy array of floats
+            Numpy array of viscosities (Pa*s) for diffusion creep at each depth
+            in z.
+
+        comb_temps: Numpy array of floats
+            Numpy array containing the combined conductive and adiabatic 
+            temperatures (K) at each depth given in z. Temperatures are
+            calculated the same way as in the geotherm function
+
+        P: Numpy array of floats
+            Numpy array containing the pressure (Pa) at each depth in z
+    """
+    # Calculate geotherm to get z, comb_temps, and adiab_temps
+    # TODO: Add flag controlling whether geotherm prints LAB temp, etc. (don't add to pull req tho)
+    bound_temps, bound_heat_flows, z, comb_temps, cond_temps, adiab_temps = \
+        geotherm(thicknesses=thicknesses, depth=depth, heat_flow=heat_flow,
+                 plot=plot, thermal_expansivity=thermal_expansivity)
+    
+    # Assign input densities to array
+    rho = density_profile(z=z, thicknesses=thicknesses, densities=densities,
+                           depth=depth)
+    
+    # Calculate densities using adiabatic profile
+    rho_adiab = adiab_density(rho, thermal_expansivity, comb_temps, 
+                               adiab_temps)
+    
+    # Calculate pressure
+    P = pressure(z, rho_adiab)
+    
+    # Calculate depths of each layer boundary
+    boundaries = np.zeros(len(thicknesses) + 1, dtype=int)
+    boundaries[0] = thicknesses[0]
+    for i in range(1, len(thicknesses)):
+        boundaries[i] = boundaries[i - 1] + thicknesses[i]
+    boundaries[-1] = depth + 1
+    
+    # Calculate dislocation and diffusion creep for each layer    
+    disl = np.zeros(len(z))
+    diff = np.zeros(len(z))
+
+    # Calculate dislocation creep and diffusion creep viscosities for depth
+    # using the pressure and temperature at each depth and the physical
+    # properties of the current layer
+    depth_index = 0
+    for i in range(0, len(boundaries)):
+        while depth_index < len(z) and z[depth_index] < boundaries[i] * 1000:
+            disl[depth_index] = visc_dislocation(A=A[i], n=n[i], E=E[i], 
+                                                 P=P[depth_index], V=V[i],
+                                                 T=comb_temps[depth_index], 
+                                                 strain_rate=strain_rate, R=R)
+            
+            diff[depth_index] = visc_diffusion(A=A_df[i], m=m[i], d=d, 
+                                               E=E_df[i], P=P[depth_index], 
+                                               V=V_df[i], 
+                                               T=comb_temps[depth_index], 
+                                               strain_rate=strain_rate, R=R)
+            
+            depth_index += 1
+    
+    # Calculate composite viscosity from dislocation and diffusion creep data
+    comp = visc_composite(disl, diff)
+    
+    # Plot Profiles
+    if plot==True:
+
+        # Setting up data to plot
+        fig = plt.figure(dpi=300)
+        viscosities = [disl, diff, comp]
+        ax1 = fig.add_subplot(131)
+        ax2 = fig.add_subplot(132)
+        ax3 = fig.add_subplot(133)
+        axes = [ax1, ax2, ax3]
+        titles = ['Dislocation Creep', 'Diffusion Creep', 'Composite']
+        
+        # Plotting each of the 3 viscosities
+        for x in range(3): 
+            axes[x].plot(viscosities[x], z/1e3, linestyle='-',  color='blue')
+            axes[x].invert_yaxis()
+            axes[x].set_xlabel('Viscosity (Pa*s)')
+            axes[x].set_ylabel('Depth (km)')
+            axes[x].set_xlim([1e16, 1e30])
+            axes[x].set_ylim([depth, 0])
+            axes[x].set_xscale('log')
+            axes[x].set_title(titles[x])
+            
+        plt.tight_layout()
+    
+    return(z, comp, disl, diff, comb_temps, P)
