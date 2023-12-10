@@ -423,16 +423,16 @@ def drucker_prager(pressure, internal_friction=30, cohesion=2e7):
 
 def viscosity(A, n, d, m, E, P, V, T, strain_rate=1e-15, R=8.31451):
     """
-    Calculate viscosity of a material according to equation from the ASPECT 
-    manual.
-    TODO:  Find where this equation is in the manual (also note which version of manual)
-    TODO: Units for A: Pa^(-n-r) * m^m * s^(-1) (maybe verify with manual if possible and check that things cancel)
+    Calculate viscosity of a material according to equation from the Material
+    Model section of the ASPECT 2.6.0-pre manual. (The exact equation can be
+    found under "Parameter name: Model name" in the 'diffusion dislocation'
+    paragraph)
     
     For dislocation creep, m = 0. For diffusion creep, n = 1.
     
     Parameters:
         A: float
-            Power-law constant (kg * m^-2 * s^-1) <-- does NOT account for exponent
+            Power-law constant (Units: Pa^(-n-r) * m^m * s^(-1)) [TODO: Where does the "r" come from (everything else cancels)]
 
         n: float
             Stress exponent. n = 1. for diffusion creep.
@@ -458,7 +458,6 @@ def viscosity(A, n, d, m, E, P, V, T, strain_rate=1e-15, R=8.31451):
         strain_rate: float
             square root of the second invariant of the strain rate tensor (s^-1)
             (default value: 1e-15)
-            [TODO: What does this mean? <-- this is how you convert strain into a number so you don't have to deal with whole matrix]
 
         R: float
             Gas constant (J/K*mol) (default value: 8.31451)
@@ -476,13 +475,15 @@ def viscosity(A, n, d, m, E, P, V, T, strain_rate=1e-15, R=8.31451):
 def visc_diffusion(A, d, m, E, P, V, T, strain_rate=1e-15, R=8.31451):
     """
     Calculate viscosity of a material undergoing diffusion creep.
-    Calculations are based on equation from the ASPECT manual.
-    TODO: Update fxn description after updating viscosity fxn
+    Calculations are based on an equation from the Material
+    Model section of the ASPECT 2.6.0-pre manual. (The exact equation can be
+    found under "Parameter name: Model name" in the 'diffusion dislocation'
+    paragraph)
     TODO: Confirm units for A
     
     Parameters:
         A: float
-            Power-law constant (kg * m^-2 * s^-1)
+            Power-law constant (Units: Pa^(-n-r) * m^m ^ s^(-1))
 
         d: float
             Grain size of the material (m)
@@ -505,7 +506,6 @@ def visc_diffusion(A, d, m, E, P, V, T, strain_rate=1e-15, R=8.31451):
         strain_rate: float
             square root of the second invariant of the strain rate tensor (s^-1)
             (default value: 1e-15)
-            [TODO: What does this mean?]
 
         R: float
             Gas constant (J/K*mol) (default value: 8.31451)
@@ -525,13 +525,15 @@ def visc_dislocation(A, n, E, P, V, T, strain_rate=1e-15, R=8.31451):
     
     """
     Calculate viscosity for a material undergoing dislocation creep.
-    Calculations based on equation from the ASPECT manual.
-    TODO: Update fxn description after updating viscosity fxn
+    Calculations are based on an equation from the Material
+    Model section of the ASPECT 2.6.0-pre manual. (The exact equation can be
+    found under "Parameter name: Model name" in the 'diffusion dislocation'
+    paragraph)
     TODO: Confirm units for A
     
     Parameters:
         A: float
-            Power-law constant (kg * m^-2 * s^-1)
+            Power-law constant (Pa^(-n-r) * m^m ^ s^(-1))
 
         n: float
             Stress exponent.
@@ -573,7 +575,9 @@ def visc_composite(visc_dislocation, visc_diffusion):
     Calculate an array of composite viscosities for a material by combining
     arrays of viscosities calculated from the diffusion creep and dislocation
     creep flow laws. Both viscosity arrays must be pre-calculated and passed 
-    into this function as parameters.
+    into this function as parameters. Each composite viscosity is 
+    calculated by taking the harmonic average of its corresponding dislocation
+    and diffusion creep viscosities.
     
     Parameters:
         visc_dislocation: Numpy array of floats
@@ -589,7 +593,6 @@ def visc_composite(visc_dislocation, visc_diffusion):
             Composite viscosity of the material (Pa*s)
     """
     
-    # TODO: What is the basis of these calculations? <-- harmonic average, also defined in link dylan will send me
     visc = (
         (visc_dislocation * visc_diffusion) / 
         (visc_dislocation + visc_diffusion)
@@ -606,19 +609,21 @@ def adiab_density(input_density, thermal_expansivity, temperature,
     density accounts for temperature variations in different depths/layers 
     within the Earth.
 
-    TODO: Find reference source (and finish docstring)
+    TODO: Find reference source
 
     Parameters:
         input_density: Numpy array of floats
-            Input density (kg/m^2)
+            Array of input densities (kg/m^2)
 
         thermal_expansivity: Float
             Thermal expansivity (K^-1)
 
-        TODO: finish this part of docstring (don't worry abt renaming)
-        temperature: Temperature (K) <-- comb_temps in fxn call
-        reference_temp: Reference temperature (K) <-- adiab_temps in fxn call
-    
+        temperature: Numpy array of floats
+            Total temperatures (K) for each input density
+
+        reference_temp: Numpy array of floats
+            Adiabatic temperatures (K) for each input density
+                
     Returns:
         output: Numpy array of floats
             Adiabatic densities (kg/m^2) corresponding to each input density
@@ -746,7 +751,7 @@ def viscosity_profile(A, A_df, n, d, m, E, E_df, V, V_df,
             viscosity calculations
 
         d: float
-            Grain size (m). Assumed constant for all layers [TODO: Change this if time]
+            Grain size (m). Assumed constant for all layers 
 
         m: List of floats
             List of grain size exponents for each layer for diffusion creep 
