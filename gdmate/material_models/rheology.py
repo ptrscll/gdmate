@@ -397,10 +397,12 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
 def drucker_prager(pressure, internal_friction=30, cohesion=2e7):
     """
     Calculate failure strength of a material from a given pressure, angle of 
-    internal friction, and cohesion using Drucker-Prager criterion.
+    internal friction, and cohesion using Drucker-Prager criterion. If pressure
+    is passed as a numpy array, returns a numpy array of failure strengths for
+    each of the given pressures
 
     Parameters:
-        pressure: int or float
+        pressure: int or float (or numpy array of ints/floats)
             Pressure (Pa)
 
         internal_friction: int or float
@@ -410,7 +412,7 @@ def drucker_prager(pressure, internal_friction=30, cohesion=2e7):
             Cohesion (Pa) (default: 2e7)
     
     Returns:
-        strength: float
+        strength: float (or numpy array of floats)
             Strength (Pa)
 
     """
@@ -905,3 +907,158 @@ def viscosity_profile(A, A_df, n, d, m, E, E_df, V, V_df,
         plt.tight_layout()
     
     return(z, comp, disl, diff, comb_temps, P)
+
+# TODO: Test this function
+def strength_profile(A, A_df, n, d, m, E, E_df, V, V_df, 
+                      thicknesses=[20,20,60], densities=[2800,2900,3300,3300],
+                      heat_flow=0.05296, thermal_expansivity=2.e-5, depth=600,
+                      strain_rate=1e-15, R=8.31451, plot=True):
+    """
+    Function to calculate strength profile of the Earth using factors as
+    reported in ASPECT. Treats the Earth's interior as divided into discrete 
+    layers with different material properties. Default values for layer 
+    thicknesses and densities are given for (in order) the upper crust, lower 
+    crust, mantle lithosphere, and mantle asthenosphere.
+
+    The effective strength at each depth is calculated by taking the minimum of
+    the viscous strength at that depth (calculated via the same procedure
+    described for the function viscosity_profile) and the plastic strength at
+    that depth (calculated via the Drucker-Prager criterion).
+
+    # TODO: Modify this below
+    This function returns an array of effective strengths at 1000 m intervals
+    corresponding to depths in a z array (which is also returned).
+    This function returns the dislocation creep, diffusion creep, and composite
+    viscosities at 1000 m intervals corresponding to depths in a z array (which
+    is also returned). The temperature and pressure at each depth are also
+    returned.
+
+    Optionally, this function can output a graph of the strength profile, the
+    geotherm, and the dislocation creep, diffusion creep, and composite 
+    viscosity profiles that were found.
+
+    Note that any parameter that consists of an array of values corresponding
+    to each layer is ordered from top-most layer to bottom-most layer.
+    
+    Parameters:
+        A: List of floats
+            List of power-law constants for each layer for dislocation creep
+            viscosity calculations
+
+        A_df: List of floats
+            List of power-law constants for each layer for diffusion creep
+            viscosity calculations
+
+        n: List of floats
+            List of stress exponents for each layer for dislocation creep 
+            viscosity calculations
+
+        d: float
+            Grain size (m). Assumed constant for all layers 
+
+        m: List of floats
+            List of grain size exponents for each layer for diffusion creep 
+            viscosity calculations
+
+        E: List of floats
+            List of activation energies (J/mol) for each layer for dislocation
+            creep calculations
+
+        E_df: List of floats
+            List of activation energies (J/mol) for each layer for diffusion
+            creep calculations
+
+        V: List of floats
+            List of activation volumes (m^3/mol) for each layer for dislocation
+            creep
+
+        V_df: List of floats
+            List of activation volumes (m^3/mol) for each layer for diffusion
+            creep
+
+        thicknesses: Numpy array of ints
+            Thicknesses (km) of each layer, ordered from top to bottom and
+            excluding the bottom layer (which is assumed to extend to the
+            greatest depth in z) (default: [20, 20, 60])
+        
+        densities: Numpy array of ints
+            Densities (kg/m^2) for each layer, order from top to bottom (and
+            including the bottom layer). (default: [2800, 2900, 3300, 3300])
+
+        heat_flow: float
+            Surface heat flow (W/m^3) (default: 0.05296)
+
+        
+        thermal_expansivity: float
+            Thermal expansivity (K^-1) (default: 2.e-5)
+
+        depth: int
+            Maximum depth of model (km) (default: 600)
+
+        strain_rate: float
+            square root of the second invariant of the strain rate tensor (s^-1)
+            (default value: 1e-15)
+
+        R: float
+            Gas constant (J/K*mol) (default value: 8.31451)
+
+        plot: bool            
+            Boolean (True or False) indicating whether to produce plots of the
+            strength, geotherm, and viscosity profiles. (default: True)
+
+    # TODO: Update this section
+    Returns:
+        z: Numpy array of ints
+            Numpy array of depths in meters (not kilometers). Depths are spaced
+            1000 m apart and start from 0 and end at the maximum depth given by
+            the parameter depth.
+
+        comp: Numpy array of floats
+            Numpy array of viscosities (Pa*s) for composite creep at each depth
+            in z.
+
+        disl: Numpy array of floats
+            Numpy array of viscosities (Pa*s) for dislocation creep at each depth
+            in z.
+
+        diff: Numpy array of floats
+            Numpy array of viscosities (Pa*s) for diffusion creep at each depth
+            in z.
+
+        comb_temps: Numpy array of floats
+            Numpy array containing the combined conductive and adiabatic 
+            temperatures (K) at each depth given in z. Temperatures are
+            calculated the same way as in the geotherm function
+
+        P: Numpy array of floats
+            Numpy array containing the pressure (Pa) at each depth in z
+    """
+
+    # Calculate viscosity profile
+    # TODO: Reformat once we know what params we actually need
+    z, comp, disl, diff, T, P = viscosity_profile(A=A, A_df=A_df, n=n, d=d,m=m,E=E,
+                               E_df=E_df,V=V,V_df=V_df,densities=densities,thicknesses=thicknesses,
+                               heat_flow=heat_flow, thermal_expansivity=thermal_expansivity,
+                               depth=depth, 
+                               strain_rate=strain_rate, R=R, plot=plot)
+
+    # Calculate viscous strength from composite viscosity
+    viscous_strength = 2*comp*strain_rate
+
+    # Calculate plastic strength using the Drucker-Prager criterion
+    plastic_strength = drucker_prager(P,internal_friction=30)
+
+    # Calculate the effective strength at each depth by taking the minimum of
+    # viscous and plastic strength
+    eff_strength = np.minimum(viscous_strength,plastic_strength)
+
+    # TODO: Does this look good?
+    if plot == True:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.plot(eff_strength / 1e6, z / 1000)
+        ax.invert_yaxis()
+        ax.set_xlabel('Differential Stress (MPa)')
+        ax.set_ylabel('Depth (km)')
+    
+    return(eff_strength, z, comp, disl, diff, T, P) # TODO: Change what we return?
