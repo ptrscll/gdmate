@@ -838,8 +838,7 @@ def viscosity_profile(A, A_df, n, d, m, E, E_df, V, V_df,
                  printout=False)
     
     # Assign input densities to array
-    rho = density_profile(z=z, thicknesses=thicknesses, densities=densities,
-                           depth=depth)
+    rho = density_profile(z=z, thicknesses=thicknesses, densities=densities)
     
     # Calculate densities using adiabatic profile
     rho_adiab = adiab_density(rho, thermal_expansivity, comb_temps, 
@@ -908,11 +907,11 @@ def viscosity_profile(A, A_df, n, d, m, E, E_df, V, V_df,
     
     return(z, comp, disl, diff, comb_temps, P)
 
-# TODO: Test this function
+
 def strength_profile(A, A_df, n, d, m, E, E_df, V, V_df, 
                       thicknesses=[20,20,60], densities=[2800,2900,3300,3300],
                       heat_flow=0.05296, thermal_expansivity=2.e-5, depth=600,
-                      strain_rate=1e-15, R=8.31451, plot=True):
+                      strain_rate=1e-15, R=8.31451, internal_friction=30, plot=True):
     """
     Function to calculate strength profile of the Earth using factors as
     reported in ASPECT. Treats the Earth's interior as divided into discrete 
@@ -1000,7 +999,10 @@ def strength_profile(A, A_df, n, d, m, E, E_df, V, V_df,
             (default value: 1e-15)
 
         R: float
-            Gas constant (J/K*mol) (default value: 8.31451)
+            Gas constant (J/K*mol) (default value: 8.31451)            
+
+        internal_friction: int or float
+            Angle of internal friction (degrees) used (default: 30)
 
         plot: bool            
             Boolean (True or False) indicating whether to produce plots of the
@@ -1046,13 +1048,13 @@ def strength_profile(A, A_df, n, d, m, E, E_df, V, V_df,
     viscous_strength = 2*comp*strain_rate
 
     # Calculate plastic strength using the Drucker-Prager criterion
-    plastic_strength = drucker_prager(P,internal_friction=30)
+    plastic_strength = drucker_prager(P,internal_friction=internal_friction)
 
     # Calculate the effective strength at each depth by taking the minimum of
     # viscous and plastic strength
     eff_strength = np.minimum(viscous_strength,plastic_strength)
 
-    # TODO: Does this look good?
+    # TODO: Does this look good? (also make sure to test this)
     if plot == True:
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -1061,4 +1063,40 @@ def strength_profile(A, A_df, n, d, m, E, E_df, V, V_df,
         ax.set_xlabel('Differential Stress (MPa)')
         ax.set_ylabel('Depth (km)')
     
-    return(eff_strength, z, comp, disl, diff, T, P) # TODO: Change what we return?
+    #return(eff_strength, z, comp, disl, diff, T, P) # TODO: Change what we return?
+    return eff_strength
+
+# Testing code - TODO: Get rid of this
+
+# Set constants from prm
+strain_rate = 1e-15
+
+rho_uc_low = 2729.044834307992
+rho_lc_low = 2826.510721247563
+rho_mantle_low =3216.374269005848
+
+densities = [rho_uc_low,rho_lc_low,rho_mantle_low,rho_mantle_low]
+
+# Dislocation Creep Factors
+A = [8.57e-28,7.13e-18,6.52e-16,6.52e-16]
+E = [223.e3,345.e3,530.e3,530.e3]
+n = [4.,3.,3.5,3.5]
+V = [0,0,18.e-6,18.e-6]
+
+# Diffusion Creep Factors
+A_df = [1.e-50,1.e-50,1.e-50,2.37e-15]
+E_df = [0,0,0,375.e3]
+m = [0,0,0,3.]
+d = 1.e-3
+V_df = [0,0,0,2.e-6]
+
+eff_strength = strength_profile(A=A,A_df=A_df,n=n,d=d,m=m,E=E,E_df=E_df,V=V,
+                               V_df=V_df,densities=densities,thicknesses=[20,20,80],
+                               heat_flow=0.04812, internal_friction=30)
+
+eff_strength_hot = strength_profile(A=A,A_df=A_df,n=n,d=d,m=m,E=E,E_df=E_df,V=V,
+                               V_df=V_df,densities=densities,thicknesses=[20,20,40],
+                               heat_flow=0.06021, internal_friction=30)
+
+print(eff_strength)
+print(eff_strength_hot)
