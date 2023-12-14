@@ -434,7 +434,7 @@ def viscosity(A, n, d, m, E, P, V, T, strain_rate=1e-15, R=8.31451):
     
     Parameters:
         A: float
-            Power-law constant (Units: Pa^(-n-r) * m^m * s^(-1)) [TODO: Where does the "r" come from (everything else cancels)]
+            Power-law constant (Units: Pa^(-n-r) * m^m * s^(-1)) [TODO: Where does the "r" come from (everything else cancels) <-- r is water fugacity, but ASPECT can't handle water fugacity, so it has to be handled with the A term]
 
         n: float
             Stress exponent. n = 1. for diffusion creep.
@@ -907,7 +907,10 @@ def viscosity_profile(A, A_df, n, d, m, E, E_df, V, V_df,
     
     return(z, comp, disl, diff, comb_temps, P)
 
-
+# TODO: Add input that's a text field that lets users choose which of the three types of viscosity to use
+# This will require all viscosity inputs to have a default value (maybe None)
+# Also make this change to viscosity profile too
+# TODO: Change output to be the type of viscosity used
 def strength_profile(A, A_df, n, d, m, E, E_df, V, V_df, 
                       thicknesses=[20,20,60], densities=[2800,2900,3300,3300],
                       heat_flow=0.05296, thermal_expansivity=2.e-5, depth=600,
@@ -1063,8 +1066,8 @@ def strength_profile(A, A_df, n, d, m, E, E_df, V, V_df,
         ax.set_xlabel('Differential Stress (MPa)')
         ax.set_ylabel('Depth (km)')
     
-    #return(eff_strength, z, comp, disl, diff, T, P) # TODO: Change what we return?
-    return eff_strength
+    # TODO: Change what we return to be the chosen viscosity
+    return eff_strength, z, comp, T
 
 # Testing code - TODO: Get rid of this
 
