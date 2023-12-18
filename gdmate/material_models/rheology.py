@@ -434,7 +434,9 @@ def viscosity(A, n, d, m, E, P, V, T, strain_rate=1e-15, R=8.31451):
     
     Parameters:
         A: float
-            Power-law constant (Units: Pa^(-n-r) * m^m * s^(-1)) [TODO: Where does the "r" come from (everything else cancels) <-- r is water fugacity, but ASPECT can't handle water fugacity, so it has to be handled with the A term]
+            Power-law constant (Units: Pa^(-n-r) * m^m * s^(-1))
+            Note that r represents water fugacity, which ASPECT handles in the
+            A term.
 
         n: float
             Stress exponent. n = 1. for diffusion creep.
@@ -481,11 +483,12 @@ def visc_diffusion(A, d, m, E, P, V, T, strain_rate=1e-15, R=8.31451):
     Model section of the ASPECT 2.6.0-pre manual. (The exact equation can be
     found under "Parameter name: Model name" in the 'diffusion dislocation'
     paragraph)
-    TODO: Confirm units for A
     
     Parameters:
         A: float
             Power-law constant (Units: Pa^(-n-r) * m^m ^ s^(-1))
+            Note that r represents water fugacity, which ASPECT handles in the
+            A term.
 
         d: float
             Grain size of the material (m)
@@ -531,11 +534,12 @@ def visc_dislocation(A, n, E, P, V, T, strain_rate=1e-15, R=8.31451):
     Model section of the ASPECT 2.6.0-pre manual. (The exact equation can be
     found under "Parameter name: Model name" in the 'diffusion dislocation'
     paragraph)
-    TODO: Confirm units for A
     
     Parameters:
         A: float
             Power-law constant (Pa^(-n-r) * m^m ^ s^(-1))
+            Note that r represents water fugacity, which ASPECT handles in the
+            A term.
 
         n: float
             Stress exponent.
@@ -716,6 +720,9 @@ def pressure(z, rho, g=9.81):
     return P
 
 
+# TODO: Update to plot a viscosity of the user's choosing
+# This will also require setting all params to None by default and changing how plotting works
+# It will be necessary to update the docstring too
 def viscosity_profile(A, A_df, n, d, m, E, E_df, V, V_df, 
                       thicknesses=[20,20,60], densities=[2800,2900,3300,3300],
                       heat_flow=0.05296, thermal_expansivity=2.e-5, depth=600,
