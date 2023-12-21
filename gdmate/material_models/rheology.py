@@ -720,33 +720,44 @@ def pressure(z, rho, g=9.81):
     return P
 
 
-# TODO: Update to plot a viscosity of the user's choosing
-# This will also require setting all params to None by default and changing how plotting works
-# It will be necessary to update the docstring too
-def viscosity_profile(A, A_df, n, d, m, E, E_df, V, V_df, 
+# TODO: Update parameter names to make it easier to tell which vars are used for what viscs
+# Also finish updating docstring once done
+def viscosity_profile(visc_type, A=None, A_df=None, n=None, d=None, m=None, 
+                      E=None, E_df=None, V=None, V_df=None, 
                       thicknesses=[20,20,60], densities=[2800,2900,3300,3300],
                       heat_flow=0.05296, thermal_expansivity=2.e-5, depth=600,
                       strain_rate=1e-15, R=8.31451, plot=True):
     """
-    Function to calculate composite viscosity profile using factors as reported
-    to ASPECT. Treats the Earth's interior as divided into discrete layers with
-    different material properties. Default values for layer thicknesses and 
-    densities are given for (in order) the upper crust, lower crust, mantle 
+    Function to calculate viscosity profile using factors as reported
+    to ASPECT. Can be used to calculate a profile for dislocation creep,
+    diffusion creep, or composite viscosity based on the value of parameter
+    `visc_type`, which can be set to \"dislocation\", \"diffusion\", or
+    \"composite\". 
+    
+    This function treats the Earth's interior as divided into discrete layers
+    with different material properties. Default values for layer thicknesses 
+    and densities are given for (in order) the upper crust, lower crust, mantle
     lithosphere, and mantle asthenosphere.
 
-    This function returns the dislocation creep, diffusion creep, and composite
-    viscosities at 1000 m intervals corresponding to depths in a z array (which
+    This function returns values for the chosen type of viscosity 
+    at 1000 m intervals corresponding to depths in a z array (which
     is also returned). The temperature and pressure at each depth are also
     returned.
 
     Optionally, this function can output a graph of the geotherm and the 
-    dislocation creep, diffusion creep, and composite viscosity profiles that
-    were found.
+    viscosity profiles that was found. <-- TODO: Update if we keep composite visc profile like it used to be
 
-    Note that any parameter that consists of an array of values corresponding
-    to each layer is ordered from top-most layer to bottom-most layer.
+    Parameters that are not used to calculate all types of viscosities are 
+    initialized to None. For which parameters are used to calculate which types
+    of viscosity, see below. Also note that any parameter that consists of an 
+    array of values corresponding to each layer is ordered from top-most layer 
+    to bottom-most layer.
     
+    TODO: Update this (i.e, rest of docstring) with visc_type, what params are used for what viscosites
+    and new var names/default values
     Parameters:
+        visc_type: string
+
         A: List of floats
             List of power-law constants for each layer for dislocation creep
             viscosity calculations
@@ -838,6 +849,13 @@ def viscosity_profile(A, A_df, n, d, m, E, E_df, V, V_df,
         P: Numpy array of floats
             Numpy array containing the pressure (Pa) at each depth in z
     """
+    # Verify that inputted viscosity type is valid
+    # TODO: Should I give proper error message / what's the standard for errors?
+    assert(visc_type == "dislocation" or visc_type == "diffusion" or 
+           visc_type == "composite")
+
+
+
     # Calculate geotherm to get z, comb_temps, and adiab_temps
     bound_temps, bound_heat_flows, z, comb_temps, cond_temps, adiab_temps = \
         geotherm(thicknesses=thicknesses, depth=depth, heat_flow=heat_flow,
@@ -860,10 +878,17 @@ def viscosity_profile(A, A_df, n, d, m, E, E_df, V, V_df,
     for i in range(1, len(thicknesses)):
         boundaries[i] = boundaries[i - 1] + thicknesses[i]
     boundaries[-1] = depth + 1
+
+    # Determine which types of viscosities need to be calculated
+    need_disl = (visc_type == "composite" or visc_type == "dislocation")
+    need_diff = (visc_type == "composite" or visc_type == "diffusion")
     
-    # Calculate dislocation and diffusion creep for each layer    
-    disl = np.zeros(len(z))
-    diff = np.zeros(len(z))
+    # Calculate dislocation and diffusion creep for each layer (as needed)
+    if need_disl:   
+        disl = np.zeros(len(z))
+
+    if need_diff:
+        diff = np.zeros(len(z))
 
     # Calculate dislocation creep and diffusion creep viscosities for depth
     # using the pressure and temperature at each depth and the physical
@@ -871,48 +896,71 @@ def viscosity_profile(A, A_df, n, d, m, E, E_df, V, V_df,
     depth_index = 0
     for i in range(0, len(boundaries)):
         while depth_index < len(z) and z[depth_index] < boundaries[i] * 1000:
-            disl[depth_index] = visc_dislocation(A=A[i], n=n[i], E=E[i], 
-                                                 P=P[depth_index], V=V[i],
-                                                 T=comb_temps[depth_index], 
-                                                 strain_rate=strain_rate, R=R)
-            
-            diff[depth_index] = visc_diffusion(A=A_df[i], m=m[i], d=d, 
-                                               E=E_df[i], P=P[depth_index], 
-                                               V=V_df[i], 
-                                               T=comb_temps[depth_index], 
-                                               strain_rate=strain_rate, R=R)
+
+            if need_disl:
+                disl[depth_index] = visc_dislocation(A=A[i], n=n[i], E=E[i], 
+                                                     P=P[depth_index], V=V[i],
+                                                     T=comb_temps[depth_index],
+                                                     strain_rate=strain_rate, 
+                                                     R=R)
+                
+            if need_diff:
+                diff[depth_index] = visc_diffusion(A=A_df[i], m=m[i], d=d, 
+                                                   E=E_df[i], P=P[depth_index],
+                                                   V=V_df[i], 
+                                                   T=comb_temps[depth_index], 
+                                                   strain_rate=strain_rate, R=R)
             
             depth_index += 1
     
     # Calculate composite viscosity from dislocation and diffusion creep data
-    comp = visc_composite(disl, diff)
+    if visc_type == "dislocation":
+        final_visc = disl
+    elif visc_type == "diffusion":
+        final_visc = diff
+    elif visc_type == "composite":
+        final_visc = visc_composite(disl, diff)
     
+    # TODO - Should I make composite viscosity plot like diff/disl creep visc
     # Plot Profiles
     if plot==True:
 
         # Setting up data to plot
         fig = plt.figure(dpi=300)
-        viscosities = [disl, diff, comp]
-        ax1 = fig.add_subplot(131)
-        ax2 = fig.add_subplot(132)
-        ax3 = fig.add_subplot(133)
-        axes = [ax1, ax2, ax3]
-        titles = ['Dislocation Creep', 'Diffusion Creep', 'Composite']
-        
-        # Plotting each of the 3 viscosities
-        for x in range(3): 
-            axes[x].plot(viscosities[x], z/1e3, linestyle='-',  color='blue')
-            axes[x].invert_yaxis()
-            axes[x].set_xlabel('Viscosity (Pa*s)')
-            axes[x].set_ylabel('Depth (km)')
-            axes[x].set_xlim([1e16, 1e30])
-            axes[x].set_ylim([depth, 0])
-            axes[x].set_xscale('log')
-            axes[x].set_title(titles[x])
-            
+
+        if visc_type == "composite":
+            viscosities = [disl, diff, final_visc]
+            ax1 = fig.add_subplot(131)
+            ax2 = fig.add_subplot(132)
+            ax3 = fig.add_subplot(133)
+            axes = [ax1, ax2, ax3]
+            titles = ['Dislocation Creep', 'Diffusion Creep', 'Composite']
+
+            # Plotting each of the 3 viscosities
+            for x in range(3): 
+                axes[x].plot(viscosities[x], z/1e3, linestyle='-',  color='blue')
+                axes[x].invert_yaxis()
+                axes[x].set_xlabel('Viscosity (Pa*s)')
+                axes[x].set_ylabel('Depth (km)')
+                axes[x].set_xlim([1e16, 1e30])
+                axes[x].set_ylim([depth, 0])
+                axes[x].set_xscale('log')
+                axes[x].set_title(titles[x])
+
+        else:
+            ax = fig.add_subplot(111)
+            ax.plot(final_visc, z/1e3, linestyle='-',  color='blue')
+            ax.invert_yaxis()
+            ax.set_xlabel('Viscosity (Pa*s)')
+            ax.set_ylabel('Depth (km)')
+            ax.set_xlim([1e16, 1e30])
+            ax.set_ylim([depth, 0])
+            ax.set_xscale('log')
+            ax.set_title(visc_type.capitalize() + ' Creep Viscosity Profile')
+
         plt.tight_layout()
     
-    return(z, comp, disl, diff, comb_temps, P)
+    return(z, final_visc, comb_temps, P)
 
 # TODO: Add input that's a text field that lets users choose which of the three types of viscosity to use
 # This will require all viscosity inputs to have a default value (maybe None)
@@ -1048,7 +1096,7 @@ def strength_profile(A, A_df, n, d, m, E, E_df, V, V_df,
 
     # Calculate viscosity profile
     # TODO: Reformat once we know what params we actually need
-    z, comp, disl, diff, T, P = viscosity_profile(A=A, A_df=A_df, n=n, d=d,m=m,E=E,
+    z, comp, T, P = viscosity_profile(visc_type="composite", A=A, A_df=A_df, n=n, d=d,m=m,E=E,
                                E_df=E_df,V=V,V_df=V_df,densities=densities,thicknesses=thicknesses,
                                heat_flow=heat_flow, thermal_expansivity=thermal_expansivity,
                                depth=depth, 
@@ -1073,10 +1121,10 @@ def strength_profile(A, A_df, n, d, m, E, E_df, V, V_df,
         ax.set_xlabel('Differential Stress (MPa)')
         ax.set_ylabel('Depth (km)')
     
-    # TODO: Change what we return to be the chosen viscosity
     return eff_strength, z, comp, T
 
 # Testing code - TODO: Get rid of this
+# NOTE: This code assumes strength_profile ONLY returns effective strength
 
 # Set constants from prm
 strain_rate = 1e-15
@@ -1100,6 +1148,18 @@ m = [0,0,0,3.]
 d = 1.e-3
 V_df = [0,0,0,2.e-6]
 
+# Choose what to test by uncommenting out certain lines below
+
+'''
+
+disl_visc = viscosity_profile(visc_type="dislocation", A=A,A_df=A_df,n=n,d=d,m=m,E=E,E_df=E_df,V=V,
+                               V_df=V_df,densities=densities,thicknesses=[20,20,80],
+                               heat_flow=0.04812)
+'''
+
+
+'''
+
 eff_strength = strength_profile(A=A,A_df=A_df,n=n,d=d,m=m,E=E,E_df=E_df,V=V,
                                V_df=V_df,densities=densities,thicknesses=[20,20,80],
                                heat_flow=0.04812, internal_friction=30)
@@ -1108,5 +1168,7 @@ eff_strength_hot = strength_profile(A=A,A_df=A_df,n=n,d=d,m=m,E=E,E_df=E_df,V=V,
                                V_df=V_df,densities=densities,thicknesses=[20,20,40],
                                heat_flow=0.06021, internal_friction=30)
 
+
 print(eff_strength)
 print(eff_strength_hot)
+'''
