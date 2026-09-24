@@ -10,7 +10,7 @@
    :maxdepth: 2
    :caption: Contents:
 
-   CONTRIBUTING
+   contributing
    guides/python_package
    notebooks/helloworld
    notebooks/visualization

@@ -1,13 +1,8 @@
-"""
-Test for placeholder code.
-"""
-import unittest
+"""Test for placeholder code."""
 
 import gdmate as gd
 
-class TestHelloWorld(unittest.TestCase):
-    def test_helloworld(self):
-        self.assertEqual(gd.helloworld(),'Hello World')
 
-if __name__ == '__main__':
-    unittest.main()
+def test_helloworld():
+    """Return the expected greeting."""
+    assert gd.helloworld() == "Hello World"

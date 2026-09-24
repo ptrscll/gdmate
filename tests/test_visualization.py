@@ -1,14 +1,14 @@
 """
 Tests for analysis.visualization module
 """
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import pyvista as pv
 
 from gdmate.visualization import pyvista_vis
 
 # Create very small mesh of 9 cells with 16 points and assign each a value
-mesh = pv.UniformGrid(dims=(4, 4, 1)).cast_to_unstructured_grid()
+mesh = pv.ImageData(dimensions=(4, 4, 1)).cast_to_unstructured_grid()
 mesh['sample_field'] = np.arange(9)
 
 def test_pv_plot_2d():
