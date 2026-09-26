@@ -6,32 +6,40 @@ This guide assumes basic familiarity with Python and installing packages.
 
 ## Basic directory structure ##
 
-The root directory contains the usual basic repository files (`README.md`, `license.txt`, `.gitignore`), as well as the `setup.py` file for the package and some additional setup files described below. The actual source code for the installable package resides in the `gdmate` directory, which has the same name as the repository so that the package will also be named `gdmate`. Additional directories contain material that isn't part of the installable source code, including documentation (`docs`), Jupyter Notebooks (`notebooks`), and tests (`tests`), which are each discussed below.
+The root directory contains the usual basic repository files (`README.md`,
+`license.txt`, and `.gitignore`) as well as the `pyproject.toml` file that
+defines the package and its development tools. The installable source code
+resides in the `gdmate` directory. Additional directories contain
+documentation (`docs`), Jupyter Notebooks (`notebooks`), and tests (`tests`).
 
 Within the `gdmate` directory, the source code is contained within _modules_, which are individual `.py` files that each contain callable _functions_. These modules are organized into _packages_, which are directories containing multiple modules and an `__init__.py` file, which indicates that the modules should be treated together as a package. The principal package is `gdmate`, and each of the subdirectories (e.g. `analysis_modules`, `io`, etc.) are considered a _subpackage_ of gdmate. Each package/subpackage needs to be installed during package setup, and the package/subpackage structure is an important consideration for importing and namespaces wihen using the package.
 
 More about Python modules available [here](https://docs.python.org/3/tutorial/modules.html), and more about packaging [here](https://packaging.python.org/en/latest/tutorials/packaging-projects/).
 
-## Setup file for pip installation ##
+## Project configuration and installation ##
 
-At its core, Python package installation is usually handled using pip (even in conda environments). When the command `pip install` is executed, pip will look for a setup file, with one of the standard options being a `setup.py` file that is configured using the setuptools package. A sample file from the Python Packaging Authority is available [here](https://github.com/pypa/sampleproject/blob/main/setup.py).
+Python package installation is usually handled by pip, including inside conda
+environments. GDMATE uses the standardized `pyproject.toml` format with
+setuptools as its build backend. The Python Packaging Authority provides a
+[packaging tutorial](https://packaging.python.org/en/latest/tutorials/packaging-projects/)
+that explains this format.
 
-Fundamentally, this file contains key metadata (authors, version, etc.), information about the location of source code, and information about dependencies. In GDMATE, the following lines are key for setting up the package:
+The file contains project metadata, supported Python versions, runtime
+dependencies, optional development and documentation dependencies, and tool
+configuration. For example:
 
+```toml
+[project]
+requires-python = ">=3.9"
+dependencies = ["matplotlib", "numpy", "pyvista", "scipy"]
+
+[project.optional-dependencies]
+dev = ["build", "nbmake", "pytest>=8", "ruff>=0.11"]
 ```
-    packages=["gdmate","gdmate.visualization","gdmate.analysis_modules",
-        "gdmate.io","gdmate.education","gdmate.material_models"],
-    python_requires=">=3.7, <4",
-    install_requires=["numpy","scipy","matplotlib","pyvista"],
-```
 
-The `packages` variable specifies where to find the source code and includes both the main package in the main directory and subpackages within subdirectories.
-
-The `python_requires` variable specifies the supported version of Python. In this case, we are trying to maintain compatibility with all version of Python 3 from 3.7 on, which is reflected in our testing workflow discussed below.
-
-The `install_requires` variable lists the dependencies for the package. Note that in many cases we can use the dependencies specified here in place of a `requirements.txt` file.
-
-With this file in place, running `pip install .` in the root directory will install GDMATE in the current Python environment, because pip will search that directory and use the information in `setup.py` to install the package.
+Running `pip install .` from the repository root installs GDMATE and its
+runtime dependencies. Contributors can use `pip install -e ".[dev]"` for an
+editable installation with the test, lint, and build tools.
 
 ## Imports and Namespaces ##
 If all `__init__.py` files are blank, each subpackage within the Python package can be imported directly (e.g., `import gdmate.analysis_modules`). However, if only the root package is imported (i.e., `import gdmate`), the modules within subpackages will not be accessible. Adding import statements to the base `__init__.py` file defines the namespaces for subpackages, modules, and or functions in relation to the base package. For example, the `__init__.py` file for GDMATE contains the line:
@@ -49,9 +57,21 @@ Setting up automated tests is essential for debugging non-functional code and en
 ### Pytest ###
 Designing tests for use with Pytest is fairly straightforward. Pytest will search a repository for directories, modules, and functions with the word "test," making it simple to run all tests just with the command `pytest`. To design a test for use with Pytest, you simply have to make functions with `assert` statements that Pytest can attempt to evaluate as true. A simple example is shown [here](https://docs.pytest.org/en/7.1.x/). In GDMATE, the tests are housed within a `tests` directory separate from the source code, and the tests can be run locally by installing Pytest in an environment with GDMATE and executing `pytest`.
 
-We extend our testing to include whether all code in Jupyter Notebooks will also execute successfully, which is very easy to implement with the nbmake plugin for Pytest. Once nbmake is installed in the environment, all that is required to include Jupyter Notebooks is to run `pytest --nbmake`. The Jupyter Notebooks for GDMATE are all housed in the `notebooks` directory outside of the source code.
+We extend testing to verify the reproducible Jupyter Notebooks with the nbmake
+plugin for Pytest. Notebook tests are run separately from unit tests:
 
-Although tests can be run locally, we automatically run tests using multiple versions of Python a GitHub Actions workflow. This workflow is contained within `.github/workflows/python-test.yml` and contains instructions to set up a virtual environment for versions 3.7, 3.8, 3.9, and 3.10 of Python, install GDMATE along with its dependencies, and Pytest, and then run Pytest. These tests are run every time there is a commit or pull request on the `main` branch of the GDMATE repository to ensure that new additions do not break the package.
+```console
+pytest --nbmake notebooks/helloworld.ipynb notebooks/visualization.ipynb
+```
+
+The GitHub Actions workflow tests Python 3.9 through 3.13. It also builds the
+distribution, runs Ruff, and executes the selected notebooks. These checks run
+for pull requests and pushes to `main`.
 
 ## Sphinx Documentation ##
-Documentation is generated using Sphinx and hosted online using Read the Docs. The necessary files are housed in a `docs` directory separate from the source code. As described [here](https://www.sphinx-doc.org/en/master/tutorial/getting-started.html), the essential files needed for Sphinx can be generated using `sphinx-quickstart` once Sphinx is installed in an environment. The most important of these is `conf.py`, which contains the information needed to build the documentation, including setting the package directory, choosing the theme, and specifying any extensions needed. We make use of the `autosummary` and `autodoc` extensions included within Sphinx to autodocument the package API, as well as `nbsphinx` for rendering Jupyter Notebooks and `myst-parser` for rendering Markdown files.
+Documentation is generated using Sphinx and hosted by Read the Docs. Sphinx
+configuration lives under `docs`, while `.readthedocs.yaml` defines the hosted
+build environment. Documentation dependencies are declared in the `docs`
+optional dependency group in `pyproject.toml`. The `autosummary` and `autodoc`
+extensions generate the package API, `nbsphinx` renders Jupyter Notebooks, and
+`myst-parser` renders Markdown files.

@@ -1,6 +1,7 @@
 # GDMATE - GeoDynamic Modeling Analysis Toolkit and Education
 [![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/gdmate/gdmate/HEAD)
+[![Documentation Status](https://readthedocs.org/projects/gdmate/badge/?version=latest)](https://gdmate.readthedocs.io/en/latest/)
 
 ## About
 
@@ -10,13 +11,15 @@ Documentation: [http://gdmate.readthedocs.io](http://gdmate.readthedocs.io)
 
 Source code: [https://github.com/gdmate/gdmate](https://github.com/gdmate/gdmate)
 
-Authors (as of 2022)
+Authors (as of 2026)
 * Dylan Vasey
 * John Naliboff
+* Lorraine Hwang
+* Haoyuan Li
 
 ## Requirements
 
-* Python 3.7+
+* Python 3.9+
 * Python modules:
   NumPy, SciPy, Matplotlib, Pyvista
 
@@ -26,7 +29,7 @@ GDMATE is still in the earliest stages of development and is not yet available f
 
 1. Click on the Binder badge at the top of this README to launch a Python environment with GDMATE installed in your web browser.
 
-2. Clone this repository, then install GDMATE into a Python environment (using `virutalenv` or `conda`) using `pip`
+2. Clone this repository, then install GDMATE into a Python environment (using `virtualenv` or `conda`) using `pip`.
 
 ```
 git clone https://github.com/gdmate/gdmate.git

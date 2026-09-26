@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gdmate"
+version = "0.1.0"
+description = "GeoDynamic Modeling Analysis Toolkit and Education"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "GPL-2.0-only"
+license-files = ["license.txt"]
+authors = [
+  { name = "Dylan Vasey" },
+  { name = "John Naliboff" },
+  { name = "Lorraine Hwang" },
+  { name = "Haoyuan Li" }
+]
+keywords = ["geodynamics", "modeling", "visualization"]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering",
+]
+dependencies = [
+  "matplotlib",
+  "numpy",
+  "pyvista",
+  "scipy",
+]
+
+[project.optional-dependencies]
+dev = [
+  "build",
+  "nbmake",
+  "pytest>=8",
+  "ruff>=0.11",
+]
+docs = [
+  "ipython",
+  "myst-parser",
+  "nbsphinx",
+  "sphinx>=7",
+  "sphinx-autodoc-typehints",
+  "sphinx-rtd-theme",
+]
+
+[project.urls]
+Documentation = "https://gdmate.readthedocs.io/"
+Issues = "https://github.com/gdmate/gdmate/issues"
+Repository = "https://github.com/gdmate/gdmate"
+
+[tool.setuptools.packages.find]
+include = ["gdmate*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["B", "E", "F", "I"]
