@@ -1,9 +1,11 @@
-import numpy as np
-import matplotlib.pyplot as plt
 import csv
 
-def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
-             radiogenic_heat=[1.e-6, 2.5e-7, 0.], surface_t=273,
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+def cond_geotherm(thicknesses=None, depth=600,
+             radiogenic_heat=None, surface_t=273,
              heat_flow=0.05296, thermal_conductivity=2.5):
     """
     Calculate conductive continental geotherm values.
@@ -25,21 +27,21 @@ def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
     calculated for each of those depths.
 
     Parameters:
-        thicknesses: list of ints
+        thicknesses: list of ints or None
             A list of ints representing the thicknesses of lithospheric units
-            in units of kilometers (default: [20, 20, 60]). These ints should
-            sum to the total thickness of the lithosphere. The first value is
-            the thickness of the uppermost lithospheric unit and each
-            subsequent value represents the thickness of the next highest
-            layer.
+            in units of kilometers. If None, defaults to [20, 20, 60]. These 
+            ints should sum to the total thickness of the lithosphere. The 
+            first value is the thickness of the uppermost lithospheric unit and
+            each subsequent value represents the thickness of the next highest
+            layer. (default: None)
 
         depth: int
             Maximum depth of model (km) (default: 600)
 
-        radiogenic_heat: list of floats    
+        radiogenic_heat: list of floats or None
             A list of floats containing the radiogenic heat production (W/m^3)
-            of each lithospheric unit. The list should have same length as 
-            thicknesses. (default: [1.e-6, 2.5e-7, 0.])
+            of each lithospheric unit. If None, defaults to [1.e-6, 2.5e-7, 0.].
+            The list should have same length as thicknesses. (default: None)
 
         surface_t: int           
             Surface temperature (K) (default: 273)
@@ -77,6 +79,12 @@ def cond_geotherm(thicknesses=[20, 20, 60], depth=600,
             the temperature at the deepest depth. Temperatures in the
             asthenosphere remain constant.
     """
+
+    # Convert Nones to default values
+    if thicknesses is None:
+        thicknesses = [20, 20, 60]
+    if radiogenic_heat is None:
+        radiogenic_heat = [1.e-6, 2.5e-7, 0.]
 
     # Convert thicknesses to meters
     thick_m = np.array(thicknesses) * 1000
@@ -225,8 +233,8 @@ def adiab_geotherm(z, ast=1573, gravity=9.81, thermal_expansivity=2.e-5,
         
     return adiab_temps
 
-def geotherm(thicknesses=[20, 20, 60], depth=600,
-             radiogenic_heat=[1.e-6, 2.5e-7, 0.], surface_t=273, 
+def geotherm(thicknesses=None, depth=600,
+             radiogenic_heat=None, surface_t=273, 
              heat_flow=0.05296, thermal_conductivity=2.5, ast=1573,
              gravity=9.81, thermal_expansivity=2.e-5, heat_capacity=750,
              plot=True, save=True):
@@ -253,17 +261,18 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
     thermal_[lithosphere thickness (km)]_[maximum depth (km)].csv
 
     Parameters:
-        thicknesses: list of ints
+        thicknesses: list of ints or None
             A list of ints representing the thicknesses of lithospheric units
-            in units of kilometers (default: [20, 20, 60])
+            in units of kilometers. If None, defaults to [20, 20, 60].
+            (default: None)
 
         depth: int
             Maximum depth of model (km) (default: 600)
 
-        radiogenic_heat: list of floats    
+        radiogenic_heat: list of floats or None 
             A list of floats containing the radiogenic heat production (W/m^3)
-            of each lithospheric unit. The list should have same length as 
-            thicknesses. (default: [1.e-6, 2.5e-7, 0.])
+            of each lithospheric unit. If None, defaults to [1.e-6, 2.5e-7, 0.]
+            The list should have same length as thicknesses. (default: None)
 
         surface_t: int           
             Surface temperature (K) (default: 273)
@@ -328,6 +337,12 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
 
     """
 
+    # Convert Nones to default values
+    if thicknesses is None:
+        thicknesses = [20, 20, 60]
+    if radiogenic_heat is None:
+        radiogenic_heat = [1.e-6, 2.5e-7, 0.]
+
     # Calculate conductive geotherm using cond_geotherm
     boundary_temps, boundary_heat_flows, z, cond_temps = cond_geotherm( \
         thicknesses=thicknesses, depth=depth, radiogenic_heat=radiogenic_heat, \
@@ -352,7 +367,7 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
     print('Bottom Temperature = ',combined_temps[-1], 'K')
     
     # Plotting combined geotherm if the plot parameter is True
-    if plot == True:
+    if plot:
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.plot(combined_temps, z / 1000)
@@ -361,7 +376,7 @@ def geotherm(thicknesses=[20, 20, 60], depth=600,
         ax.set_ylabel('Depth (km)')
 
     # Saving data on boundary conditions to csv file if save parameter is True  
-    if save==True:
+    if save:
 
         # Getting the row of data
         data = np.concatenate((boundary_temps, boundary_heat_flows[0:-1], 

@@ -2,8 +2,9 @@
 Test for rheology.py
 """
 
-import gdmate as gd
 import numpy as np
+
+import gdmate as gd
 
 
 def test_cond_geotherm():
